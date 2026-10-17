@@ -3,225 +3,236 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>장마트(JANG MART) 2025 경영 실적 모니터링 대시보드</title>
-  <meta name="description" content="장마트 2025년도 연간 실적 동적 필터링 대시보드 - 다차원 조건 검색, 5대 KPI, 인터랙티브 차트, CSV 다운로드 및 인쇄 최적화">
+  <title>?�마??JANG MART) 2025 경영 ?�적 모니?�링 ?�?�보??/title>
+  <meta name="description" content="?�마??2025?�도 ?�간 ?�적 ?�적 ?�터�??�?�보??- ?�차??조건 검?? 5?� KPI, RFM 고객 ?�그먼트 분석, ?�터?�티�?차트, CSV ?�운로드">
   
-  <!-- Pretendard 폰트 CDN -->
+  <!-- Pretendard ?�트 CDN -->
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
   
-  <!-- 분리된 전용 CSS 스타일시트 -->
+  <!-- 분리???�용 CSS ?��??�시??-->
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="dashboard-container">
     
-    <!-- 1. 헤더 영역 -->
+    <!-- 1. ?�더 ?�역 -->
     <header class="header-card" id="mainHeader">
       <div class="brand-wrapper">
-        <div class="brand-icon">🛒</div>
+        <div class="brand-icon">?��</div>
         <div class="brand-title">
-          <h1>장마트(JANG MART) 경영 실적 대시보드</h1>
-          <p>2025년도 연간 구매 데이터 기반 핵심 지표(KPI) 및 성장 동향 모니터링</p>
+          <h1>?�마??JANG MART) 경영 ?�적 ?�?�보??/h1>
+          <p>2025?�도 ?�간 구매 ?�이??�?9?�차 RFM 고객 가�??�그먼트 ?�합 모니?�링</p>
         </div>
       </div>
       
       <div class="header-actions">
         <span class="badge badge-live">
           <span class="pulse-dot"></span>
-          실적 모니터링 활성
+          ?�적 모니?�링 ?�성
         </span>
-        <button class="btn-action btn-primary" id="btnExportCSV" title="현재 필터링된 월별 집계 데이터 엑셀 CSV로 저장">
+        <button class="btn-action btn-primary" id="btnExportCSV" title="?�재 ?�터링된 집계 ?�이???��? CSV�??�??>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
             <polyline points="7 10 12 15 17 10"></polyline>
             <line x1="12" y1="15" x2="12" y2="3"></line>
           </svg>
-          CSV 다운로드
+          CSV ?�운로드
         </button>
-        <button class="btn-action" id="btnPrintReport" title="보고서 인쇄 및 PDF 저장">
+        <button class="btn-action" id="btnPrintReport" title="보고???�쇄 �?PDF ?�??>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="6 9 6 2 18 2 18 9"></polyline>
             <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
             <rect x="6" y="14" width="12" height="8"></rect>
           </svg>
-          인쇄 / PDF 저장
-        </button>
-        <button class="btn-action" id="refreshBtn" title="대시보드 새로고침">
+          ?�쇄 / PDF ?�??        </button>
+        <button class="btn-action" id="refreshBtn" title="?�?�보???�로고침">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="23 4 23 10 17 10"></polyline>
             <polyline points="1 20 1 14 7 14"></polyline>
             <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
           </svg>
-          새로고침
+          ?�로고침
         </button>
       </div>
     </header>
 
-    <!-- 2. 다차원 동적 필터바 영역 -->
-    <section class="filter-bar-card" aria-label="데이터 다차원 필터링">
+    <!-- 2. ?�차???�적 ?�터�??�역 (고객 ?�급 ?�터 추�?) -->
+    <section class="filter-bar-card" aria-label="?�이???�차???�터�?>
       <div class="filter-controls">
         
-        <!-- 점포 선택 -->
+        <!-- ?�포 ?�택 -->
         <div class="filter-group">
-          <label class="filter-label" for="filterStore">🏬 점포</label>
+          <label class="filter-label" for="filterStore">?�� ?�포</label>
           <select id="filterStore" class="filter-select">
-            <option value="all">전체 점포 (온/오프라인)</option>
-            <option value="online">온라인몰 전용</option>
-            <option value="offline_all">오프라인 매장 전체</option>
-            <optgroup label="개별 오프라인 지점">
-              <option value="수원점">수원점</option>
-              <option value="잠실점">잠실점</option>
-              <option value="영등포점">영등포점</option>
-              <option value="서울역점">서울역점</option>
-              <option value="청량리점">청량리점</option>
-              <option value="강남점">강남점</option>
-              <option value="김포공항점">김포공항점</option>
-              <option value="구로점">구로점</option>
+            <option value="all">?�체 ?�포 (???�프?�인)</option>
+            <option value="online">?�라?�몰 ?�용</option>
+            <option value="offline_all">?�프?�인 매장 ?�체</option>
+            <optgroup label="개별 ?�프?�인 지??>
+              <option value="?�원??>?�원??/option>
+              <option value="?�실??>?�실??/option>
+              <option value="?�등?�점">?�등?�점</option>
+              <option value="?�울??��">?�울??��</option>
+              <option value="�?��리점">�?��리점</option>
+              <option value="강남??>강남??/option>
+              <option value="김?�공??��">김?�공??��</option>
+              <option value="구로??>구로??/option>
             </optgroup>
           </select>
         </div>
 
-        <!-- 기준 월 선택 -->
+        <!-- 기�? ???�택 -->
         <div class="filter-group">
-          <label class="filter-label" for="filterMonth">📅 기준 월</label>
+          <label class="filter-label" for="filterMonth">?�� 기�? ??/label>
           <select id="filterMonth" class="filter-select">
-            <option value="all">1~12월 전체 (연간)</option>
-            <option value="1">1월</option>
-            <option value="2">2월</option>
-            <option value="3">3월</option>
-            <option value="4">4월</option>
-            <option value="5">5월</option>
-            <option value="6">6월</option>
-            <option value="7">7월</option>
-            <option value="8">8월</option>
-            <option value="9">9월</option>
-            <option value="10">10월</option>
-            <option value="11">11월</option>
-            <option value="12">12월</option>
+            <option value="all">1~12???�체 (?�간)</option>
+            <option value="1">1??/option>
+            <option value="2">2??/option>
+            <option value="3">3??/option>
+            <option value="4">4??/option>
+            <option value="5">5??/option>
+            <option value="6">6??/option>
+            <option value="7">7??/option>
+            <option value="8">8??/option>
+            <option value="9">9??/option>
+            <option value="10">10??/option>
+            <option value="11">11??/option>
+            <option value="12">12??/option>
           </select>
         </div>
 
-        <!-- 상품군 선택 -->
+        <!-- ?�품�??�택 -->
         <div class="filter-group">
-          <label class="filter-label" for="filterCategory">🏷️ 상품군</label>
+          <label class="filter-label" for="filterCategory">?���??�품�?/label>
           <select id="filterCategory" class="filter-select">
-            <option value="all">전체 상품군 (10개)</option>
-            <option value="소형가전">소형가전</option>
-            <option value="침구홈">침구홈</option>
-            <option value="신선식품">신선식품</option>
-            <option value="기초화장품">기초화장품</option>
-            <option value="건강식품">건강식품</option>
-            <option value="주방용품">주방용품</option>
-            <option value="생활용품">생활용품</option>
-            <option value="욕실청소">욕실청소</option>
-            <option value="가공식품">가공식품</option>
-            <option value="베이커리델리">베이커리델리</option>
+            <option value="all">?�체 ?�품�?(10�?</option>
+            <option value="?�형가??>?�형가??/option>
+            <option value="침구??>침구??/option>
+            <option value="?�선?�품">?�선?�품</option>
+            <option value="기초?�장??>기초?�장??/option>
+            <option value="건강?�품">건강?�품</option>
+            <option value="주방?�품">주방?�품</option>
+            <option value="?�활?�품">?�활?�품</option>
+            <option value="?�실�?��">?�실�?��</option>
+            <option value="가공식??>가공식??/option>
+            <option value="베이커리?�리">베이커리?�리</option>
+          </select>
+        </div>
+
+        <!-- ?�� ?�규: 고객 ?�급 ?�택 (9?�차 RFM ?�계) -->
+        <div class="filter-group">
+          <label class="filter-label" for="filterGrade">?�� 고객 ?�급</label>
+          <select id="filterGrade" class="filter-select">
+            <option value="all">?�체 고객 ?�급</option>
+            <option value="VIP ?�골">VIP ?�골 (?�위 17.6%)</option>
+            <option value="?�수 고객">?�수 고객 (28.1%)</option>
+            <option value="?�반 고객">?�반 고객 (24.7%)</option>
+            <option value="?�면 고객">?�면 고객 (29.6%)</option>
           </select>
         </div>
 
       </div>
 
       <div class="filter-status">
-        <span class="filter-badge" id="filterStatusBadge">적용 조건: 전체 점포 · 1~12월 전체 · 전체 상품군</span>
-        <button class="btn-reset" id="btnResetFilters" title="모든 필터를 기본값으로 리셋">초기화</button>
+        <span class="filter-badge" id="filterStatusBadge">?�용 조건: ?�체 ?�포 · 1~12???�체 · ?�체 ?�품�?· ?�체 ?�급</span>
+        <button class="btn-reset" id="btnResetFilters" title="모든 ?�터�?기본값으�?리셋">초기??/button>
       </div>
     </section>
 
-    <!-- 3. 5대 핵심 실적 KPI 카드 영역 -->
-    <section class="kpi-section" aria-label="5대 핵심 성과 지표">
+    <!-- 3. 5?� ?�심 ?�적 KPI 카드 ?�역 -->
+    <section class="kpi-section" aria-label="5?� ?�심 ?�과 지??>
       
-      <!-- KPI 1: 총 매출액 -->
+      <!-- KPI 1: �?매출??-->
       <article class="kpi-card card-sales" id="cardSales">
         <div class="kpi-top">
-          <span class="kpi-label">조건부 총 매출액</span>
-          <div class="kpi-icon icon-sales">💰</div>
+          <span class="kpi-label">조건부 �?매출??/span>
+          <div class="kpi-icon icon-sales">?��</div>
         </div>
         <div class="kpi-value-wrap">
           <span class="kpi-value" id="kpi-sales">0.0</span>
-          <span class="kpi-unit">억 원</span>
+          <span class="kpi-unit">????/span>
         </div>
         <div class="kpi-sub">
-          <span class="highlight" id="kpi-sales-full">₩0</span>
-          <span>(정상 매출 기준)</span>
+          <span class="highlight" id="kpi-sales-full">??</span>
+          <span>(?�상 매출 기�?)</span>
         </div>
       </article>
 
-      <!-- KPI 2: 총 주문 건수 -->
+      <!-- KPI 2: �?주문 건수 -->
       <article class="kpi-card card-orders" id="cardOrders">
         <div class="kpi-top">
-          <span class="kpi-label">총 주문 건수</span>
-          <div class="kpi-icon icon-orders">📦</div>
+          <span class="kpi-label">�?주문 건수</span>
+          <div class="kpi-icon icon-orders">?��</div>
         </div>
         <div class="kpi-value-wrap">
           <span class="kpi-value" id="kpi-orders">0</span>
-          <span class="kpi-unit">건</span>
+          <span class="kpi-unit">�?/span>
         </div>
         <div class="kpi-sub">
-          <span>판매수량</span>
-          <span class="highlight-green" id="kpi-total-qty">0개</span>
+          <span>?�매?�량</span>
+          <span class="highlight-green" id="kpi-total-qty">0�?/span>
         </div>
       </article>
 
-      <!-- KPI 3: 평균 객단가 -->
+      <!-- KPI 3: ?�균 객단가 -->
       <article class="kpi-card card-aov" id="cardAov">
         <div class="kpi-top">
-          <span class="kpi-label">평균 객단가 (AOV)</span>
-          <div class="kpi-icon icon-aov">🧾</div>
+          <span class="kpi-label">?�균 객단가 (AOV)</span>
+          <div class="kpi-icon icon-aov">?��</div>
         </div>
         <div class="kpi-value-wrap">
-          <span class="kpi-value" id="kpi-aov">₩0</span>
+          <span class="kpi-value" id="kpi-aov">??</span>
         </div>
         <div class="kpi-sub">
-          <span>주문당 평균 결제금액</span>
+          <span>주문???�균 결제금액</span>
         </div>
       </article>
 
-      <!-- KPI 4: 총 판매수량 & 고객 수 -->
+      <!-- KPI 4: �??�매?�량 & 고객 ??-->
       <article class="kpi-card card-cust" id="cardCustomers">
         <div class="kpi-top">
-          <span class="kpi-label">총 판매수량</span>
-          <div class="kpi-icon icon-cust">🛍️</div>
+          <span class="kpi-label">�??�매?�량</span>
+          <div class="kpi-icon icon-cust">?���?/div>
         </div>
         <div class="kpi-value-wrap">
           <span class="kpi-value" id="kpi-qty">0</span>
-          <span class="kpi-unit">개</span>
+          <span class="kpi-unit">�?/span>
         </div>
         <div class="kpi-sub">
-          <span>월별 합산 고객수</span>
-          <span class="highlight" id="kpi-cust-sub">0명</span>
+          <span>?�별 ?�산 고객??/span>
+          <span class="highlight" id="kpi-cust-sub">0�?/span>
         </div>
       </article>
 
-      <!-- KPI 5: 반품률 & 온라인 비중 -->
+      <!-- KPI 5: 반품�?& ?�라??비중 -->
       <article class="kpi-card card-channel" id="cardChannel">
         <div class="kpi-top">
-          <span class="kpi-label">반품률 / 온라인비중</span>
-          <div class="kpi-icon icon-channel">⚖️</div>
+          <span class="kpi-label">반품�?/ ?�라?�비�?/span>
+          <div class="kpi-icon icon-channel">?�️</div>
         </div>
         <div class="kpi-value-wrap">
           <span class="kpi-value" id="kpi-return-rate">0.0%</span>
         </div>
         <div class="kpi-sub">
-          <span>온라인 비중</span>
+          <span>?�라??비중</span>
           <span class="highlight" id="kpi-online-ratio">0.0%</span>
-          <span>(<span id="kpi-online-amt">0억</span>)</span>
+          <span>(<span id="kpi-online-amt">0??/span>)</span>
         </div>
       </article>
 
     </section>
 
-    <!-- 4. 메인 분석 차트 영역 (월별 추이 + 채널 점유율) -->
-    <section class="charts-grid" aria-label="상세 실적 차트">
+    <!-- 4. 메인 분석 차트 ?�역 (?�별 추이 + ?�� RFM 고객 ?�그먼트 분석) -->
+    <section class="charts-grid" aria-label="?�세 ?�적 차트">
       
-      <!-- 월별 실적 추이 -->
+      <!-- ?�별 ?�적 추이 -->
       <div class="chart-card">
         <div class="chart-header">
           <div class="chart-title">
-            <h2>월별 실적 추이</h2>
-            <p>선택된 필터 조건에 따른 1월~12월 월별 성장 흐름</p>
+            <h2>?�별 ?�적 추이</h2>
+            <p>?�택???�터 조건???�른 1??12???�별 ?�장 ?�름</p>
           </div>
           <div class="chart-actions" id="monthlyTabs">
-            <button class="tab-btn active" data-metric="sales">매출액</button>
+            <button class="tab-btn active" data-metric="sales">매출??/button>
             <button class="tab-btn" data-metric="orders">주문건수</button>
           </div>
         </div>
@@ -230,34 +241,49 @@
         </div>
       </div>
 
-      <!-- 채널별 매출 비중 (도넛) -->
+      <!-- ?�� ?�규: 9?�차 RFM 고객 ?�그먼트 분석 (?�넛/�? -->
       <div class="chart-card">
         <div class="chart-header">
           <div class="chart-title">
-            <h2>옴니채널 비중</h2>
-            <p>온라인몰 vs 오프라인 매장 매출 점유율</p>
+            <h2>?�� RFM 고객 ?�그먼트 분석</h2>
+            <p>고객 ?�급�?기여??�?가�?분포</p>
+          </div>
+          <div class="chart-actions" id="rfmTabs">
+            <button class="tab-btn active" data-metric="sales">매출 비중</button>
+            <button class="tab-btn" data-metric="cust">고객??비중</button>
           </div>
         </div>
         <div class="chart-canvas-wrap">
-          <canvas id="channelChart"></canvas>
+          <canvas id="rfmChart"></canvas>
+        </div>
+        <!-- VIP ?�사?�트 미니 �?-->
+        <div class="rfm-summary-strip">
+          <div class="rfm-pill pill-vip">
+            <span class="rfm-pill-title">VIP ?�골 객단가</span>
+            <span class="rfm-pill-val">??2,344</span>
+          </div>
+          <div class="rfm-pill pill-top2">
+            <span class="rfm-pill-title">?�위 2�??�급(VIP+?�수) 매출</span>
+            <span class="rfm-pill-val">69.4% (20.6??</span>
+          </div>
         </div>
       </div>
 
     </section>
 
-    <!-- 5. 하단 분석 차트 영역 (상품군별 + 오프라인 주요 점포) -->
-    <section class="secondary-grid" aria-label="상품 및 점포 분석 차트">
+    <!-- 5. ?�단 2�?분석 차트 ?�역 (?�품군별 + 채널/?�프?�인 ?�포) -->
+    <section class="secondary-grid" aria-label="?�품 �??�포 분석 차트">
       
-      <!-- 상품군별 기여도 분석 -->
+      <!-- ?�품군별 기여??분석 -->
       <div class="chart-card">
         <div class="chart-header">
           <div class="chart-title">
-            <h2>상품군별 기여도 분석</h2>
-            <p>10대 카테고리별 매출액 및 판매수량 랭킹</p>
+            <h2>?�품군별 기여??분석</h2>
+            <p>10?� 카테고리�?매출??�??�매?�량 ??��</p>
           </div>
           <div class="chart-actions" id="categoryTabs">
-            <button class="tab-btn active" data-metric="sales">매출액 순위</button>
-            <button class="tab-btn" data-metric="qty">판매수량 순위</button>
+            <button class="tab-btn active" data-metric="sales">매출???�위</button>
+            <button class="tab-btn" data-metric="qty">?�매?�량 ?�위</button>
           </div>
         </div>
         <div class="chart-canvas-wrap">
@@ -265,27 +291,31 @@
         </div>
       </div>
 
-      <!-- 주요 오프라인 점포 실적 -->
+      <!-- 채널 비중 & ?�포 ?�적 콤보 카드 -->
       <div class="chart-card">
         <div class="chart-header">
           <div class="chart-title">
-            <h2>오프라인 주요 점포 실적</h2>
-            <p>상위 거점 매장별 매출 규모</p>
+            <h2>채널 �??�포 ?�적</h2>
+            <p>?�·오?�라???�유??�?주요 매장 ?�황</p>
+          </div>
+          <div class="chart-actions" id="channelStoreTabs">
+            <button class="tab-btn active" data-view="channel">채널 비중</button>
+            <button class="tab-btn" data-view="store">Top 5 ?�포</button>
           </div>
         </div>
         <div class="chart-canvas-wrap">
-          <canvas id="storeChart"></canvas>
+          <canvas id="channelStoreChart"></canvas>
         </div>
       </div>
 
     </section>
 
-    <!-- 6. 상세 데이터 그리드 테이블 -->
-    <section class="table-card" aria-label="월별 상세 데이터 표">
+    <!-- 6. ?�세 ?�이??그리???�이�?-->
+    <section class="table-card" aria-label="?�별 ?�세 ?�이????>
       <div class="table-header">
         <div class="chart-title">
-          <h2>📊 월별 실적 상세 데이터</h2>
-          <p>선택된 필터 조건에 따른 월별 세부 지표 (매출, 반품, 주문수, 판매량, 객단가, 반품률)</p>
+          <h2>?�� ?�별 ?�적 ?�세 ?�이??/h2>
+          <p>?�택???�터 조건(?�포·?�·상?�군·고객?�급)???�른 ?�별 ?��? 지??/p>
         </div>
       </div>
       <div class="table-responsive">
@@ -293,67 +323,67 @@
           <thead>
             <tr>
               <th>구분</th>
-              <th>정상 매출액 (원)</th>
-              <th>반품 금액 (원)</th>
-              <th>주문 건수 (건)</th>
-              <th>판매 수량 (개)</th>
-              <th>평균 객단가 (원)</th>
-              <th>반품률 (%)</th>
+              <th>?�상 매출??(??</th>
+              <th>반품 금액 (??</th>
+              <th>주문 건수 (�?</th>
+              <th>?�매 ?�량 (�?</th>
+              <th>?�균 객단가 (??</th>
+              <th>반품�?(%)</th>
             </tr>
           </thead>
           <tbody id="dataTableBody">
-            <!-- 자바스크립트로 동적 렌더링 -->
+            <!-- ?�바?�크립트�??�적 ?�더�?-->
           </tbody>
           <tfoot id="dataTableFoot">
-            <!-- 자바스크립트로 합계행 렌더링 -->
+            <!-- ?�바?�크립트�??�계???�더�?-->
           </tfoot>
         </table>
       </div>
     </section>
 
-    <!-- 7. 핵심 경영 인사이트 요약 -->
-    <section class="insights-card" aria-label="경영 인사이트">
+    <!-- 7. ?�심 경영 ?�사?�트 ?�약 -->
+    <section class="insights-card" aria-label="경영 ?�사?�트">
       <div class="chart-title">
-        <h2>💡 2025 경영 실적 핵심 인사이트</h2>
-        <p>데이터 기반 의사결정을 위한 3대 핵심 포인트</p>
+        <h2>?�� 2025 경영 ?�적 ?�심 ?�사?�트</h2>
+        <p>?�이??기반 ?�사결정???�한 3?� ?�심 ?�인??/p>
       </div>
 
       <div class="insights-grid">
         <div class="insight-item growth">
-          <h3>📈 하반기 폭발적 성장세 (+90%)</h3>
+          <h3>?�� ?�반�???��???�장??(+90%)</h3>
           <p>
-            1월 1.84억 원에서 12월 3.51억 원으로 매출이 <strong>+90.1%</strong> 급증했습니다. 연말 시즌 특수 및 마케팅 효율이 집중된 결과로 지속적인 계절성 프로모션 전략이 유효합니다.
+            1??1.84???�에??12??3.51???�으�?매출??<strong>+90.1%</strong> 급증?�습?�다. ?�말 ?�즌 ?�수 �?마�????�율??집중??결과�?지?�적??계절???�로모션 ?�략???�효?�니??
           </p>
         </div>
 
         <div class="insight-item loyalty">
-          <h3>🔁 견고한 고객 락인과 높은 재구매율 (91.6%)</h3>
+          <h3>?�� VIP ?�골(17.6%)??매출 33.4% 견인 (?�레???�과)</h3>
           <p>
-            총 고객 10,000명 중 91.6%가 2회 이상 재구매했으며, 1인당 연평균 <strong>6.01회</strong> 방문했습니다. 높은 충성 고객층을 바탕으로 멤버십 차등 혜택 도입 시 객단가 추가 상승 여력이 큽니다.
+            9?�차 RFM 분석 결과, <strong>VIP ?�골�??�수 고객(�?45.7%)</strong>???�체 매출??<strong>69.4%</strong>�?차�??�고 ?�습?�다. VIP 고객??객단가??<strong>??2,344</strong>�??�체 ?�균 ?��??�등???�습?�다.
           </p>
         </div>
 
         <div class="insight-item channel">
-          <h3>🛒 소형가전 매출 1위 vs 가공식품 수량 1위</h3>
+          <h3>?�� ?�형가??매출 1??vs 가공식???�량 1??/h3>
           <p>
-            매출 기여도는 <strong>소형가전(7.4억)</strong>과 <strong>침구홈(4.6억)</strong> 등 고단가 상품이 견인했고, 고객 유입 및 구매 빈도는 <strong>가공식품(1.9만개)</strong>과 <strong>신선식품(1.7만개)</strong>이 지탱하고 있습니다.
+            매출 기여?�는 <strong>?�형가??7.4??</strong>�?<strong>침구??4.6??</strong> ??고단가 ?�품??견인?�고, 고객 ?�입 �?구매 빈도??<strong>가공식??1.9만개)</strong>�?<strong>?�선?�품(1.7만개)</strong>??지?�하�??�습?�다.
           </p>
         </div>
       </div>
     </section>
 
-    <!-- 8. 푸터 -->
+    <!-- 8. ?�터 -->
     <footer>
-      <p>© 2025 JANG MART Inc. All rights reserved. | 10회차 웹 대시보드 고도화 프로젝트</p>
+      <p>© 2025 JANG MART Inc. All rights reserved. | 10?�차 ???�?�보??고도???�로?�트 (RFM 고객 ?�그먼트 ?�합)</p>
     </footer>
 
   </div>
 
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <!-- 분리된 JS 데이터 모듈 -->
+  <!-- 분리??JS ?�이??모듈 (RFM ?�함) -->
   <script src="data.js"></script>
-  <!-- 분리된 JS 로직 모듈 -->
+  <!-- 분리??JS 로직 모듈 -->
   <script src="app.js"></script>
 </body>
 </html>

@@ -1,27 +1,32 @@
 /**
  * 장마트(JANG MART) 2025 경영 실적 모니터링 대시보드 로직
+ * (1단계: 9회차 RFM 고객 세그먼트 통합 버전)
  * 
- * - 다차원 동적 필터링 (점포 / 기준 월 / 상품군)
+ * - 다차원 동적 필터링 (점포 / 기준 월 / 상품군 / 고객 등급)
+ * - RFM 고객 세그먼트(VIP/우수/일반/휴면) 기여도 분석 차트
  * - 실시간 KPI 및 4종 인터랙티브 차트 리렌더링
- * - 월별 상세 실적 데이터 테이블 동적 렌더링 (순수 CSS 클래스 기반)
+ * - 월별 상세 실적 데이터 테이블 동적 렌더링
  * - 엑셀 호환 CSV 데이터 내보내기 (UTF-8 BOM)
  * - 인쇄 / PDF 보고서 내보내기 최적화
  */
 
 // 1. 대시보드 상태 관리
 const dashboardState = {
-  store: "all",      // 'all', 'online', 'offline_all', 또는 개별 점포명
-  month: "all",      // 'all' 또는 1 ~ 12
-  category: "all",   // 'all' 또는 개별 상품군명
-  monthlyMetric: "sales",   // 'sales' | 'orders'
-  categoryMetric: "sales"   // 'sales' | 'qty'
+  store: "all",          // 'all', 'online', 'offline_all', 또는 개별 점포명
+  month: "all",          // 'all' 또는 1 ~ 12
+  category: "all",       // 'all' 또는 개별 상품군명
+  grade: "all",          // 'all' 또는 'VIP 단골', '우수 고객', '일반 고객', '휴면 고객'
+  monthlyMetric: "sales",// 'sales' | 'orders'
+  categoryMetric: "sales",// 'sales' | 'qty'
+  rfmMetric: "sales",    // 'sales' | 'cust'
+  channelStoreView: "channel" // 'channel' | 'store'
 };
 
 // 차트 인스턴스 보관
 let monthlyChart = null;
 let categoryChart = null;
-let channelChart = null;
-let storeChart = null;
+let rfmChart = null;
+let channelStoreChart = null;
 
 // 포맷터 유틸
 function formatCurrency(num) {
@@ -33,7 +38,7 @@ function formatNumber(num) {
 
 // 2. 데이터 필터링 및 집계 엔진
 function getFilteredSummary() {
-  const { store, month, category } = dashboardState;
+  const { store, month, category, grade } = dashboardState;
   
   // 조건에 맞는 레코드 필터링
   const filtered = JANG_DATA.records.filter(r => {
@@ -47,6 +52,9 @@ function getFilteredSummary() {
     
     // 상품군 조건
     if (category !== "all" && r.cat !== category) return false;
+
+    // 👑 고객 등급 조건
+    if (grade !== "all" && r.gr !== grade) return false;
     
     return true;
   });
@@ -82,6 +90,12 @@ function getFilteredSummary() {
     if (st !== "온라인몰") storeMap[st] = { sales: 0, orders: 0 };
   });
 
+  // 👑 RFM 고객 세그먼트 집계
+  const rfmMap = {};
+  JANG_DATA.grades.forEach(g => {
+    rfmMap[g] = { sales: 0, orders: 0, cust: 0, qty: 0 };
+  });
+
   filtered.forEach(r => {
     totalSales += r.sales;
     totalRefund += r.refund;
@@ -95,7 +109,7 @@ function getFilteredSummary() {
       offlineSales += r.sales;
     }
 
-    // 월별
+    // 월별 집계
     const mIdx = r.m - 1;
     if (mIdx >= 0 && mIdx < 12) {
       monthlyAgg[mIdx].sales += r.sales;
@@ -105,16 +119,24 @@ function getFilteredSummary() {
       monthlyAgg[mIdx].cust += r.cust;
     }
 
-    // 상품군별
+    // 상품군별 집계
     if (categoryMap[r.cat]) {
       categoryMap[r.cat].sales += r.sales;
       categoryMap[r.cat].qty += r.qty;
     }
 
-    // 오프라인 점포별
+    // 오프라인 점포별 집계
     if (r.ch === "오프라인" && storeMap[r.st]) {
       storeMap[r.st].sales += r.sales;
       storeMap[r.st].orders += r.orders;
+    }
+
+    // RFM 등급별 집계
+    if (rfmMap[r.gr]) {
+      rfmMap[r.gr].sales += r.sales;
+      rfmMap[r.gr].orders += r.orders;
+      rfmMap[r.gr].cust += r.cust;
+      rfmMap[r.gr].qty += r.qty;
     }
   });
 
@@ -142,6 +164,7 @@ function getFilteredSummary() {
     monthly: monthlyAgg,
     categoryMap,
     storeMap,
+    rfmMap,
     filteredRecords: filtered
   };
 }
@@ -201,16 +224,18 @@ function updateFilterStatusBadge() {
   const storeSelect = document.getElementById("filterStore");
   const monthSelect = document.getElementById("filterMonth");
   const categorySelect = document.getElementById("filterCategory");
+  const gradeSelect = document.getElementById("filterGrade");
 
   if (!storeSelect || !monthSelect || !categorySelect) return;
   
   const storeText = storeSelect.selectedOptions[0].text;
   const monthText = monthSelect.selectedOptions[0].text;
   const categoryText = categorySelect.selectedOptions[0].text;
+  const gradeText = gradeSelect ? gradeSelect.selectedOptions[0].text : "전체 등급";
   
   const statusEl = document.getElementById("filterStatusBadge");
   if (statusEl) {
-    statusEl.textContent = `적용 조건: ${storeText} · ${monthText} · ${categoryText}`;
+    statusEl.textContent = `적용 조건: ${storeText} · ${monthText} · ${categoryText} · ${gradeText}`;
   }
 }
 
@@ -218,6 +243,7 @@ function updateFilterStatusBadge() {
 Chart.defaults.color = "#94a3b8";
 Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Pretendard Variable", Pretendard, "Segoe UI", Roboto, sans-serif';
 
+// 5-1. 월별 실적 추이 차트
 function renderMonthlyChart(summary) {
   const canvas = document.getElementById("monthlyChart");
   if (!canvas) return;
@@ -287,22 +313,28 @@ function renderMonthlyChart(summary) {
   });
 }
 
-function renderChannelChart(summary) {
-  const canvas = document.getElementById("channelChart");
+// 5-2. 👑 RFM 고객 세그먼트 분석 차트 (신규)
+function renderRFMChart(summary) {
+  const canvas = document.getElementById("rfmChart");
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
-  if (channelChart) channelChart.destroy();
+  if (rfmChart) rfmChart.destroy();
 
-  const { onlineSales, offlineSales } = summary.kpis;
-  const hasData = (onlineSales + offlineSales) > 0;
+  const isSales = dashboardState.rfmMetric === "sales";
+  const grades = JANG_DATA.grades;
+  const values = grades.map(g => isSales ? summary.rfmMap[g].sales : summary.rfmMap[g].cust);
+  const total = values.reduce((a, b) => a + b, 0) || 1;
 
-  channelChart = new Chart(ctx, {
+  // 등급별 컬러 팔레트 (VIP: 골드, 우수: 인디고, 일반: 시안, 휴면: 슬레이트)
+  const bgColors = ["#f59e0b", "#6366f1", "#06b6d4", "#64748b"];
+
+  rfmChart = new Chart(ctx, {
     type: "doughnut",
     data: {
-      labels: ["오프라인 매장", "온라인몰"],
+      labels: grades,
       datasets: [{
-        data: hasData ? [offlineSales, onlineSales] : [1, 0],
-        backgroundColor: ["#6366f1", "#06b6d4"],
+        data: values,
+        backgroundColor: bgColors,
         borderColor: "#0f172a",
         borderWidth: 3,
         hoverOffset: 6
@@ -314,25 +346,26 @@ function renderChannelChart(summary) {
       plugins: {
         legend: {
           position: "bottom",
-          labels: { color: "#cbd5e1", padding: 16, font: { size: 12, weight: "600" } }
+          labels: { color: "#cbd5e1", padding: 14, font: { size: 12, weight: "600" } }
         },
         tooltip: {
           backgroundColor: "rgba(17, 24, 39, 0.95)",
           padding: 12,
           callbacks: {
             label: function(ctx) {
-              const total = (onlineSales + offlineSales) || 1;
               const pct = ((ctx.raw / total) * 100).toFixed(1);
-              return ` ${ctx.label}: ${formatCurrency(ctx.raw)} (${pct}%)`;
+              const valStr = isSales ? formatCurrency(ctx.raw) : formatNumber(ctx.raw) + "명";
+              return ` ${ctx.label}: ${valStr} (${pct}%)`;
             }
           }
         }
       },
-      cutout: "68%"
+      cutout: "62%"
     }
   });
 }
 
+// 5-3. 상품군별 기여도 차트 (가로 막대)
 function renderCategoryChart(summary) {
   const canvas = document.getElementById("categoryChart");
   if (!canvas) return;
@@ -386,56 +419,100 @@ function renderCategoryChart(summary) {
   });
 }
 
-function renderStoreChart(summary) {
-  const canvas = document.getElementById("storeChart");
+// 5-4. 채널 비중 및 Top 5 점포 콤보 차트
+function renderChannelStoreChart(summary) {
+  const canvas = document.getElementById("channelStoreChart");
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
-  if (storeChart) storeChart.destroy();
+  if (channelStoreChart) channelStoreChart.destroy();
 
-  const items = Object.entries(summary.storeMap).map(([st, val]) => ({
-    st,
-    sales: val.sales
-  }));
+  const isChannel = dashboardState.channelStoreView === "channel";
 
-  items.sort((a, b) => b.sales - a.sales);
-  const top5 = items.slice(0, 5);
+  if (isChannel) {
+    const { onlineSales, offlineSales } = summary.kpis;
+    const hasData = (onlineSales + offlineSales) > 0;
 
-  storeChart = new Chart(ctx, {
-    type: "bar",
-    data: {
-      labels: top5.map(i => i.st),
-      datasets: [{
-        label: "오프라인 매출액",
-        data: top5.map(i => i.sales),
-        backgroundColor: ["#38bdf8", "#818cf8", "#a78bfa", "#f472b6", "#fb923c"],
-        borderRadius: 8
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: "rgba(17, 24, 39, 0.95)",
-          padding: 12,
-          callbacks: {
-            label: (ctx) => ` 연간 매출: ${formatCurrency(ctx.raw)}`
+    channelStoreChart = new Chart(ctx, {
+      type: "doughnut",
+      data: {
+        labels: ["오프라인 매장", "온라인몰"],
+        datasets: [{
+          data: hasData ? [offlineSales, onlineSales] : [1, 0],
+          backgroundColor: ["#6366f1", "#06b6d4"],
+          borderColor: "#0f172a",
+          borderWidth: 3,
+          hoverOffset: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: "bottom",
+            labels: { color: "#cbd5e1", padding: 14, font: { size: 12, weight: "600" } }
+          },
+          tooltip: {
+            backgroundColor: "rgba(17, 24, 39, 0.95)",
+            padding: 12,
+            callbacks: {
+              label: function(ctx) {
+                const total = (onlineSales + offlineSales) || 1;
+                const pct = ((ctx.raw / total) * 100).toFixed(1);
+                return ` ${ctx.label}: ${formatCurrency(ctx.raw)} (${pct}%)`;
+              }
+            }
+          }
+        },
+        cutout: "62%"
+      }
+    });
+  } else {
+    // 점포 랭킹 막대 차트
+    const items = Object.entries(summary.storeMap).map(([st, val]) => ({
+      st,
+      sales: val.sales
+    }));
+    items.sort((a, b) => b.sales - a.sales);
+    const top5 = items.slice(0, 5);
+
+    channelStoreChart = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels: top5.map(i => i.st),
+        datasets: [{
+          label: "오프라인 매출액",
+          data: top5.map(i => i.sales),
+          backgroundColor: ["#38bdf8", "#818cf8", "#a78bfa", "#f472b6", "#fb923c"],
+          borderRadius: 8
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: "rgba(17, 24, 39, 0.95)",
+            padding: 12,
+            callbacks: {
+              label: (ctx) => ` 연간 매출: ${formatCurrency(ctx.raw)}`
+            }
+          }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: "#cbd5e1" } },
+          y: {
+            grid: { color: "rgba(255, 255, 255, 0.05)" },
+            ticks: { callback: (v) => (v / 100000000).toFixed(1) + "억" }
           }
         }
-      },
-      scales: {
-        x: { grid: { display: false }, ticks: { color: "#cbd5e1" } },
-        y: {
-          grid: { color: "rgba(255, 255, 255, 0.05)" },
-          ticks: { callback: (v) => (v / 100000000).toFixed(1) + "억" }
-        }
       }
-    }
-  });
+    });
+  }
 }
 
-// 6. 상세 데이터 그리드 테이블 렌더링 (순수 CSS 클래스 사용)
+// 6. 상세 데이터 그리드 테이블 렌더링
 function renderDataTable(summary) {
   const tbody = document.getElementById("dataTableBody");
   const tfoot = document.getElementById("dataTableFoot");
@@ -486,9 +563,9 @@ function refreshDashboard() {
   const summary = getFilteredSummary();
   updateKPIView(summary);
   renderMonthlyChart(summary);
-  renderChannelChart(summary);
+  renderRFMChart(summary);
   renderCategoryChart(summary);
-  renderStoreChart(summary);
+  renderChannelStoreChart(summary);
   renderDataTable(summary);
 }
 
@@ -534,7 +611,8 @@ function exportToCSV() {
   const link = document.createElement("a");
   
   const storeName = dashboardState.store === "all" ? "전체점포" : dashboardState.store;
-  const fileName = `장마트_실적집계_${storeName}_${new Date().toISOString().slice(0, 10)}.csv`;
+  const gradeName = dashboardState.grade === "all" ? "전체등급" : dashboardState.grade;
+  const fileName = `장마트_실적집계_${storeName}_${gradeName}_${new Date().toISOString().slice(0, 10)}.csv`;
   
   link.setAttribute("href", url);
   link.setAttribute("download", fileName);
@@ -548,6 +626,7 @@ function setupEventListeners() {
   const storeSelect = document.getElementById("filterStore");
   const monthSelect = document.getElementById("filterMonth");
   const categorySelect = document.getElementById("filterCategory");
+  const gradeSelect = document.getElementById("filterGrade");
 
   if (storeSelect) {
     storeSelect.addEventListener("change", (e) => {
@@ -570,15 +649,24 @@ function setupEventListeners() {
     });
   }
 
+  if (gradeSelect) {
+    gradeSelect.addEventListener("change", (e) => {
+      dashboardState.grade = e.target.value;
+      refreshDashboard();
+    });
+  }
+
   const resetBtn = document.getElementById("btnResetFilters");
   if (resetBtn) {
     resetBtn.addEventListener("click", () => {
       dashboardState.store = "all";
       dashboardState.month = "all";
       dashboardState.category = "all";
+      dashboardState.grade = "all";
       if (storeSelect) storeSelect.value = "all";
       if (monthSelect) monthSelect.value = "all";
       if (categorySelect) categorySelect.value = "all";
+      if (gradeSelect) gradeSelect.value = "all";
       refreshDashboard();
     });
   }
@@ -593,6 +681,16 @@ function setupEventListeners() {
     });
   });
 
+  const rfmTabs = document.querySelectorAll("#rfmTabs .tab-btn");
+  rfmTabs.forEach(btn => {
+    btn.addEventListener("click", () => {
+      rfmTabs.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      dashboardState.rfmMetric = btn.dataset.metric;
+      renderRFMChart(getFilteredSummary());
+    });
+  });
+
   const categoryTabs = document.querySelectorAll("#categoryTabs .tab-btn");
   categoryTabs.forEach(btn => {
     btn.addEventListener("click", () => {
@@ -600,6 +698,16 @@ function setupEventListeners() {
       btn.classList.add("active");
       dashboardState.categoryMetric = btn.dataset.metric;
       renderCategoryChart(getFilteredSummary());
+    });
+  });
+
+  const channelStoreTabs = document.querySelectorAll("#channelStoreTabs .tab-btn");
+  channelStoreTabs.forEach(btn => {
+    btn.addEventListener("click", () => {
+      channelStoreTabs.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      dashboardState.channelStoreView = btn.dataset.view;
+      renderChannelStoreChart(getFilteredSummary());
     });
   });
 

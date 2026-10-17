@@ -14,61 +14,8 @@
   // 처음 열었을 때 보여 줄 조건
   const state = { segment: '전체', month: 12, kpi: 'sales' };
 
-  // ---- 숫자 모양 ----------------------------------------------------------
-  const nf = new Intl.NumberFormat('ko-KR');
-  const fmtInt = (v) => nf.format(Math.round(v));
-  const trim = (v) => String(Number(v.toFixed(2)));
-  const ratio = (a, b) => (b ? a / b : 0);
-
-  // 3.45억, 2,345만처럼 줄여 씁니다.
-  function fmtWonShort(v) {
-    if (Math.abs(v) >= 1e8) return (v / 1e8).toFixed(2) + '억';
-    if (Math.abs(v) >= 1e4) return nf.format(Math.round(v / 1e4)) + '만';
-    return fmtInt(v);
-  }
-
-  function fmtWonAxis(v) {
-    if (v === 0) return '0';
-    if (v >= 1e8) return trim(v / 1e8) + '억';
-    if (v >= 1e4) return nf.format(Number((v / 1e4).toFixed(2))) + '만';
-    return fmtInt(v);
-  }
-
-  // ---- 5개 지표 정의: 지표를 바꾸거나 더하려면 이 목록만 고치면 됩니다 ----
-  // better: 'up'은 오를수록 좋은 지표, 'down'은 내릴수록 좋은 지표
-  // change: 'pct'는 전월 대비 증감률(%), 'pp'는 차이(%p)
-  const KPIS = [
-    {
-      key: 'sales', label: '매출', unit: '원', better: 'up', change: 'pct',
-      month: (v, i) => v.sales[i],
-      year: (v) => v.year.sales, yearLabel: '연간 합계',
-      short: fmtWonShort, full: fmtInt, axis: fmtWonAxis,
-    },
-    {
-      key: 'customers', label: '구매 고객 수', unit: '명', better: 'up', change: 'pct',
-      month: (v, i) => v.customers[i],
-      year: (v) => v.year.customers, yearLabel: '연간(중복 제외)',
-      short: fmtInt, full: fmtInt, axis: fmtInt,
-    },
-    {
-      key: 'orders', label: '주문 건수', unit: '건', better: 'up', change: 'pct',
-      month: (v, i) => v.orders[i],
-      year: (v) => v.year.orders, yearLabel: '연간 합계',
-      short: fmtInt, full: fmtInt, axis: fmtInt,
-    },
-    {
-      key: 'aov', label: '객단가', unit: '원', better: 'up', change: 'pct',
-      month: (v, i) => ratio(v.sales[i], v.orders[i]),
-      year: (v) => ratio(v.year.sales, v.year.orders), yearLabel: '연간 평균',
-      short: fmtInt, full: fmtInt, axis: fmtWonAxis,
-    },
-    {
-      key: 'returnRate', label: '반품률', hint: '낮을수록 좋아요', unit: '%', better: 'down', change: 'pp',
-      month: (v, i) => ratio(v.returnAmount[i], v.grossAmount[i]) * 100,
-      year: (v) => ratio(v.year.returnAmount, v.year.grossAmount) * 100, yearLabel: '연간',
-      short: (v) => v.toFixed(2), full: (v) => v.toFixed(2), axis: (v) => trim(v) + '%',
-    },
-  ];
+  const JM = window.JM;
+  const { KPIS, withUnit } = JM;
 
   // ---- 도우미 -------------------------------------------------------------
   function el(tag, className, text) {
@@ -84,15 +31,9 @@
     return node;
   }
 
-  // "29.71억 원", "10,000명", "1.45%"처럼 단위를 붙입니다.
-  function withUnit(kpi, text) {
-    if (kpi.unit === '%') return text + '%';
-    return /[억만]$/.test(text) ? text + ' ' + kpi.unit : text + kpi.unit;
-  }
-
   const currentKpi = () => KPIS.find((k) => k.key === state.kpi);
   const segmentValues = () => DATA.values[state.segment];
-  const series = (kpi) => Array.from({ length: MONTH_COUNT }, (_, i) => kpi.month(segmentValues(), i));
+  const series = (kpi) => JM.series(kpi, segmentValues());
   const yearText = DATA ? DATA.period[0].slice(0, 4) : '';
 
   // 전월 대비 변화. 비교할 전월이 없으면 null

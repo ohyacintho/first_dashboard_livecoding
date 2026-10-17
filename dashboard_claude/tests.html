@@ -1,0 +1,98 @@
+<!doctype html>
+<!-- 작성: Claude (Anthropic) -->
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>장마트 대시보드 테스트</title>
+  <style>
+    body { font: 14px/1.5 system-ui, sans-serif; margin: 16px; }
+    #summary { font-weight: 700; margin: 8px 0 16px; }
+    #results { list-style: none; padding: 0; margin: 0; }
+    #results li { padding: 2px 0; }
+    #results li.pass::before { content: '통과 '; color: #1a7f37; }
+    #results li.fail::before { content: '실패 '; color: #cf222e; }
+    #results li.fail { color: #cf222e; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>장마트 대시보드 테스트</h1>
+  <p id="summary">실행 중…</p>
+  <ul id="results"></ul>
+
+  <script src="data.js"></script>
+  <script src="kpis.js"></script>
+  <!-- 이후 단계에서 targets.js, share.js를 여기에 추가해요 -->
+
+  <script>
+    (function () {
+      'use strict';
+      var tests = [];
+      var pass = 0;
+      var fail = 0;
+      var list = document.getElementById('results');
+
+      function show(x) { try { return JSON.stringify(x); } catch (e) { return String(x); } }
+      window.test = function (name, fn) { tests.push({ name: name, fn: fn }); };
+      window.eq = function (actual, expected) {
+        if (actual !== expected && show(actual) !== show(expected)) {
+          throw new Error('기대 ' + show(expected) + ' / 실제 ' + show(actual));
+        }
+      };
+      window.near = function (actual, expected, tol) {
+        if (!(Math.abs(actual - expected) <= tol)) {
+          throw new Error('기대 ' + show(expected) + ' ±' + tol + ' / 실제 ' + show(actual));
+        }
+      };
+
+      window.runTests = function () {
+        tests.forEach(function (t) {
+          var li = document.createElement('li');
+          try {
+            t.fn();
+            pass++;
+            li.className = 'pass';
+            li.textContent = t.name;
+          } catch (e) {
+            fail++;
+            li.className = 'fail';
+            li.textContent = t.name + '\n  ' + (e && e.message ? e.message : e);
+          }
+          list.appendChild(li);
+        });
+        document.getElementById('summary').textContent = '통과 ' + pass + ' · 실패 ' + fail;
+      };
+    })();
+  </script>
+
+  <script>
+    // ---- kpis.js ----
+    var v = JANG_MART.values['전체'];
+    var K = function (key) { return JM.kpiByKey(key); };
+    test('pctFloor1은 내림', function () {
+      eq(JM.fmt.pctFloor1(99.96), '99.9%');
+      eq(JM.fmt.pctFloor1(105.13138), '105.1%');
+      eq(JM.fmt.pctFloor1(100), '100.0%');
+    });
+    test('지표 5개와 계수', function () {
+      eq(JM.KPIS.map(function (k) { return k.key; }).join(), 'sales,customers,orders,aov,returnRate');
+      eq(JM.TARGET_FACTOR.aov, 1.05);
+      eq(JM.TARGET_FACTOR.returnRate, 0.95);
+    });
+    test('주제 조사', function () {
+      eq(JM.KPIS.map(function (k) { return k.topic; }).join(), '은,는,는,는,은');
+    });
+    test('전체 12월 실적', function () {
+      eq(JM.series(K('sales'), v)[11], 344868700);
+      eq(JM.fmt.int(JM.series(K('aov'), v)[11]), '50,294');
+      eq(JM.series(K('returnRate'), v)[11].toFixed(2), '1.67');
+    });
+    test('단위 붙이기', function () {
+      eq(JM.withUnit(K('sales'), '3.45억'), '3.45억 원');
+      eq(JM.withUnit(K('customers'), '4,684'), '4,684명');
+    });
+  </script>
+
+  <script>window.runTests();</script>
+</body>
+</html>
