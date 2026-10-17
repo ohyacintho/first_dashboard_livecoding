@@ -1,0 +1,14 @@
+# 대용량 원본 데이터 파일 제외 (GitHub 업로드 용량 절약)
+data/
+*.csv
+*.xlsx
+
+# 수업 가이드 및 임시 파일 제외 (대시보드 코드만 배포)
+*시작하기.md
+*.png
+dashboard/
+
+# OS 및 에디터 임시 파일
+.vscode/
+.DS_Store
+Thumbs.db

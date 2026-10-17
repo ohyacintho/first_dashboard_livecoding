@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>장마트(JANG MART) 2025 주요 실적 모니터링 대시보드</title>
+  <meta name="description" content="장마트 2025년도 5대 핵심 경영 실적(총매출, 주문건수, 객단가, 재구매율, 온라인 비중) 및 월별/상품군별 상세 분석 모니터링 대시보드">
+  
+  <!-- Pretendard 폰트 CDN -->
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  
+  <!-- 커스텀 스타일시트 -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="dashboard-container">
+    
+    <!-- 1. 헤더 영역 -->
+    <header class="header-card" id="mainHeader">
+      <div class="brand-wrapper">
+        <div class="brand-icon">🛒</div>
+        <div class="brand-title">
+          <h1>장마트(JANG MART) 경영 실적 대시보드</h1>
+          <p>2025년도 연간 구매 데이터 기반 핵심 지표(KPI) 및 성장 동향 모니터링</p>
+        </div>
+      </div>
+      
+      <div class="header-badges">
+        <span class="badge badge-live">
+          <span class="pulse-dot"></span>
+          실적 모니터링 활성
+        </span>
+        <span class="badge">기준기간: 2025.01 ~ 2025.12</span>
+        <button class="btn-refresh" id="refreshBtn" title="차트 및 지표 새로고침">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+          새로고침
+        </button>
+      </div>
+    </header>
+
+    <!-- 2. 5대 핵심 실적 KPI 카드 영역 -->
+    <section class="kpi-section" aria-label="5대 핵심 성과 지표">
+      
+      <!-- KPI 1: 총 매출액 -->
+      <article class="kpi-card card-sales" id="cardSales">
+        <div class="kpi-top">
+          <span class="kpi-label">연간 총 매출액</span>
+          <div class="kpi-icon" style="color: #38bdf8;">💰</div>
+        </div>
+        <div class="kpi-value-wrap">
+          <span class="kpi-value" id="kpi-sales">0</span>
+          <span class="kpi-unit">억 원</span>
+        </div>
+        <div class="kpi-sub">
+          <span class="highlight" id="kpi-sales-full">₩3,014,606,800</span>
+          <span>(정상 29.7억)</span>
+        </div>
+      </article>
+
+      <!-- KPI 2: 총 주문 건수 -->
+      <article class="kpi-card card-orders" id="cardOrders">
+        <div class="kpi-top">
+          <span class="kpi-label">총 주문 건수</span>
+          <div class="kpi-icon" style="color: #34d399;">📦</div>
+        </div>
+        <div class="kpi-value-wrap">
+          <span class="kpi-value" id="kpi-orders">0</span>
+          <span class="kpi-unit">건</span>
+        </div>
+        <div class="kpi-sub">
+          <span>총 판매수량</span>
+          <span class="highlight-green">121,493개</span>
+        </div>
+      </article>
+
+      <!-- KPI 3: 평균 객단가 -->
+      <article class="kpi-card card-aov" id="cardAov">
+        <div class="kpi-top">
+          <span class="kpi-label">평균 객단가 (AOV)</span>
+          <div class="kpi-icon" style="color: #f59e0b;">🧾</div>
+        </div>
+        <div class="kpi-value-wrap">
+          <span class="kpi-value" id="kpi-aov">₩0</span>
+        </div>
+        <div class="kpi-sub">
+          <span>1인당 연평균</span>
+          <span class="highlight">₩301,461</span>
+        </div>
+      </article>
+
+      <!-- KPI 4: 고객 수 & 재구매율 -->
+      <article class="kpi-card card-cust" id="cardCustomers">
+        <div class="kpi-top">
+          <span class="kpi-label">구매 고객 수</span>
+          <div class="kpi-icon" style="color: #a855f7;">👥</div>
+        </div>
+        <div class="kpi-value-wrap">
+          <span class="kpi-value" id="kpi-cust">0</span>
+          <span class="kpi-unit">명</span>
+        </div>
+        <div class="kpi-sub">
+          <span>재구매율</span>
+          <span class="highlight" id="kpi-repurchase">91.6%</span>
+          <span>(평균 6회)</span>
+        </div>
+      </article>
+
+      <!-- KPI 5: 온라인 채널 비중 -->
+      <article class="kpi-card card-channel" id="cardChannel">
+        <div class="kpi-top">
+          <span class="kpi-label">온라인 매출 비중</span>
+          <div class="kpi-icon" style="color: #06b6d4;">📱</div>
+        </div>
+        <div class="kpi-value-wrap">
+          <span class="kpi-value" id="kpi-online">0%</span>
+        </div>
+        <div class="kpi-sub">
+          <span>온라인</span>
+          <span class="highlight">11.9억</span>
+          <span>(오프 18.2억)</span>
+        </div>
+      </article>
+
+    </section>
+
+    <!-- 3. 메인 분석 차트 영역 (월별 추이 + 채널 점유율) -->
+    <section class="charts-grid" aria-label="상세 실적 차트">
+      
+      <!-- 월별 실적 추이 -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">
+            <h2>월별 실적 추이</h2>
+            <p>1월부터 12월까지의 매출 및 주문 성장 흐름</p>
+          </div>
+          <div class="chart-actions" id="monthlyTabs">
+            <button class="tab-btn active" data-metric="sales">매출액</button>
+            <button class="tab-btn" data-metric="orders">주문건수</button>
+          </div>
+        </div>
+        <div class="chart-canvas-wrap">
+          <canvas id="monthlyChart"></canvas>
+        </div>
+      </div>
+
+      <!-- 채널별 매출 비중 (도넛) -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">
+            <h2>옴니채널 비중</h2>
+            <p>온라인몰 vs 오프라인 매장 매출 점유율</p>
+          </div>
+        </div>
+        <div class="chart-canvas-wrap">
+          <canvas id="channelChart"></canvas>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- 4. 하단 분석 차트 영역 (상품군별 + 오프라인 주요 점포) -->
+    <section class="secondary-grid" aria-label="상품 및 점포 분석 차트">
+      
+      <!-- 상품군별 기여도 분석 -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">
+            <h2>상품군별 기여도 분석</h2>
+            <p>10대 주요 카테고리별 매출액 및 판매수량 비교</p>
+          </div>
+          <div class="chart-actions" id="categoryTabs">
+            <button class="tab-btn active" data-metric="sales">매출액 순위</button>
+            <button class="tab-btn" data-metric="qty">판매수량 순위</button>
+          </div>
+        </div>
+        <div class="chart-canvas-wrap">
+          <canvas id="categoryChart"></canvas>
+        </div>
+      </div>
+
+      <!-- 주요 오프라인 점포 실적 -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">
+            <h2>오프라인 Top 5 점포</h2>
+            <p>주요 매장별 연간 매출액 규모</p>
+          </div>
+        </div>
+        <div class="chart-canvas-wrap">
+          <canvas id="storeChart"></canvas>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- 5. 핵심 경영 인사이트 요약 -->
+    <section class="insights-card" aria-label="경영 인사이트">
+      <div class="chart-title">
+        <h2>💡 2025 경영 실적 핵심 인사이트</h2>
+        <p>데이터 기반 의사결정을 위한 3대 핵심 포인트</p>
+      </div>
+
+      <div class="insights-grid">
+        <div class="insight-item growth">
+          <h3>📈 하반기 폭발적 성장세 (+90%)</h3>
+          <p>
+            1월 1.84억 원에서 12월 3.51억 원으로 매출이 <strong>+90.1%</strong> 급증했습니다. 연말 시즌 특수 및 마케팅 효율이 집중된 결과로 지속적인 계절성 프로모션 전략이 유효합니다.
+          </p>
+        </div>
+
+        <div class="insight-item loyalty">
+          <h3>🔁 견고한 고객 락인과 높은 재구매율 (91.6%)</h3>
+          <p>
+            총 고객 10,000명 중 91.6%가 2회 이상 재구매했으며, 1인당 연평균 <strong>6.01회</strong> 방문했습니다. 높은 충성 고객층을 바탕으로 멤버십 차등 혜택 도입 시 객단가 추가 상승 여력이 큽니다.
+          </p>
+        </div>
+
+        <div class="insight-item channel">
+          <h3>🛒 소형가전 매출 1위 vs 가공식품 수량 1위</h3>
+          <p>
+            매출 기여도는 <strong>소형가전(7.4억)</strong>과 <strong>침구홈(4.6억)</strong> 등 고단가 상품이 견인했고, 고객 유입 및 구매 빈도는 <strong>가공식품(1.9만개)</strong>과 <strong>신선식품(1.7만개)</strong>이 지탱하고 있습니다.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. 푸터 -->
+    <footer>
+      <p>© 2025 JANG MART Inc. All rights reserved. | 10회차 웹 대시보드 프로젝트</p>
+    </footer>
+
+  </div>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- 대시보드 로직 스크립트 -->
+  <script src="app.js"></script>
+</body>
+</html>
