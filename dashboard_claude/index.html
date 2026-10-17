@@ -22,10 +22,14 @@
       <div class="toolbar">
         <button id="btn-link" class="tool-btn" type="button">링크 복사</button>
         <button id="btn-csv" class="tool-btn" type="button">CSV</button>
+        <button id="btn-print" class="tool-btn" type="button">인쇄</button>
         <span id="link-status" role="status"></span>
         <input id="link-fallback" readonly hidden aria-label="공유 링크">
       </div>
     </header>
+
+    <!-- 화면에서는 숨기고 인쇄할 때만 보여요. 내용은 script.js가 인쇄 직전에 채웁니다 -->
+    <p class="print-only" id="print-conditions"></p>
 
     <section class="filters" aria-label="조회 조건">
       <label class="field">
@@ -55,10 +59,10 @@
       <div class="tooltip" id="tooltip" hidden></div>
     </section>
 
-    <section class="card">
+    <section class="card table-card">
       <div class="card-head">
         <h2>월별 상세</h2>
-        <p class="card-sub">기준 월은 파란 줄, 차트에 그린 지표는 굵은 글씨예요. 연간 구매 고객 수는 한 해 동안 한 번 이상 산 고객 수(중복 제외)예요.</p>
+        <p class="card-sub">기준 월은 파란 줄, 차트에 그린 지표는 굵은 글씨예요. ✔ 달성 · △ 근접 · ✖ 미달이고, 오른쪽 두 열은 차트에 그린 지표의 목표와 달성률이에요. 연간 구매 고객 수는 한 해 동안 한 번 이상 산 고객 수(중복 제외)예요.</p>
       </div>
       <div class="table-wrap">
         <table id="table"></table>
@@ -67,7 +71,7 @@
 
     <footer class="page-footer">
       <p>데이터: 장마트 구매 데이터 2025-01-01 ~ 2025-12-31 (교육용 합성 데이터). 객단가 = 매출 ÷ 주문 건수. 반품률 = 반품 금액 ÷ (정상 + 반품) 금액.</p>
-      <p>만든 도구: Claude (Anthropic)</p>
+      <p>만든 도구: Claude (Anthropic)<span class="print-only"> · <span id="print-date"></span></span></p>
     </footer>
   </div>
 

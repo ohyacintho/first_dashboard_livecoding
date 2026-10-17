@@ -510,6 +510,18 @@
   const csvButton = document.getElementById('btn-csv');
   csvButton.addEventListener('click', () => JM.downloadCsv(state.segment, segmentValues()));
 
+  // 인쇄: 버튼으로 누르든 Ctrl+P든 인쇄 직전에 조회 조건 줄과 출력 날짜를 채워요.
+  function fillPrintInfo() {
+    const d = new Date();
+    const two = (n) => String(n).padStart(2, '0');
+    document.getElementById('print-conditions').textContent =
+      '조회 조건: ' + state.segment + ' · ' + yearText + '년 ' + state.month + '월 · ' + currentKpi().label;
+    document.getElementById('print-date').textContent =
+      '출력 ' + d.getFullYear() + '-' + two(d.getMonth() + 1) + '-' + two(d.getDate());
+  }
+  window.addEventListener('beforeprint', fillPrintInfo);
+  document.getElementById('btn-print').addEventListener('click', () => window.print());
+
   // 창 너비가 바뀌면 차트만 다시 그립니다.
   const chartHost = document.getElementById('chart');
   let lastWidth = chartHost.clientWidth;

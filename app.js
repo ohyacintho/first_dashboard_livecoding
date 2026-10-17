@@ -257,15 +257,15 @@ function renderMonthlyChart(summary) {
 
   const gradient = ctx.createLinearGradient(0, 0, 0, 300);
   if (isSales) {
-    gradient.addColorStop(0, "rgba(99, 102, 241, 0.4)");
-    gradient.addColorStop(1, "rgba(99, 102, 241, 0.02)");
+    gradient.addColorStop(0, "rgba(207, 24, 48, 0.18)");
+    gradient.addColorStop(1, "rgba(207, 24, 48, 0.01)");
   } else {
-    gradient.addColorStop(0, "rgba(6, 182, 212, 0.4)");
-    gradient.addColorStop(1, "rgba(6, 182, 212, 0.02)");
+    gradient.addColorStop(0, "rgba(62, 160, 148, 0.22)");
+    gradient.addColorStop(1, "rgba(62, 160, 148, 0.01)");
   }
 
   const activeMonth = parseInt(dashboardState.month);
-  const pointBg = labels.map((_, i) => (i + 1 === activeMonth) ? "#f43f5e" : (isSales ? "#818cf8" : "#22d3ee"));
+  const pointBg = labels.map((_, i) => (i + 1 === activeMonth) ? "#CF1830" : (isSales ? "#141414" : "#3EA094"));
   const pointRadius = labels.map((_, i) => (i + 1 === activeMonth) ? 7 : 4);
 
   monthlyChart = new Chart(ctx, {
@@ -275,14 +275,14 @@ function renderMonthlyChart(summary) {
       datasets: [{
         label,
         data,
-        borderColor: isSales ? "#6366f1" : "#06b6d4",
+        borderColor: isSales ? "#CF1830" : "#3EA094",
         backgroundColor: gradient,
-        borderWidth: 3,
+        borderWidth: 2.5,
         pointBackgroundColor: pointBg,
         pointBorderColor: "#ffffff",
         pointBorderWidth: 2,
         pointRadius,
-        pointHoverRadius: 8,
+        pointHoverRadius: 7,
         fill: true,
         tension: 0.35
       }]
@@ -293,18 +293,28 @@ function renderMonthlyChart(summary) {
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: "rgba(17, 24, 39, 0.95)",
+          backgroundColor: "#141414",
+          titleColor: "#ffffff",
+          bodyColor: "#f6f5f0",
+          borderColor: "rgba(255,255,255,0.15)",
+          borderWidth: 1,
           padding: 12,
+          cornerRadius: 8,
           callbacks: {
             label: (ctx) => isSales ? ` 매출액: ${formatCurrency(ctx.raw)}` : ` 주문건수: ${formatNumber(ctx.raw)}건`
           }
         }
       },
       scales: {
-        x: { grid: { color: "rgba(255, 255, 255, 0.05)" } },
+        x: {
+          grid: { color: "rgba(20, 20, 20, 0.05)" },
+          ticks: { color: "#575757", font: { family: "'Space Grotesk', sans-serif", weight: "600" } }
+        },
         y: {
-          grid: { color: "rgba(255, 255, 255, 0.05)" },
+          grid: { color: "rgba(20, 20, 20, 0.05)" },
           ticks: {
+            color: "#575757",
+            font: { family: "'Space Grotesk', sans-serif" },
             callback: (v) => isSales ? (v / 100000000).toFixed(1) + "억" : formatNumber(v)
           }
         }
@@ -313,7 +323,7 @@ function renderMonthlyChart(summary) {
   });
 }
 
-// 5-2. 👑 RFM 고객 세그먼트 분석 차트 (신규)
+// 5-2. 👑 RFM 고객 세그먼트 분석 차트 (Neutomni Editorial Palette)
 function renderRFMChart(summary) {
   const canvas = document.getElementById("rfmChart");
   if (!canvas) return;
@@ -325,8 +335,8 @@ function renderRFMChart(summary) {
   const values = grades.map(g => isSales ? summary.rfmMap[g].sales : summary.rfmMap[g].cust);
   const total = values.reduce((a, b) => a + b, 0) || 1;
 
-  // 등급별 컬러 팔레트 (VIP: 골드, 우수: 인디고, 일반: 시안, 휴면: 슬레이트)
-  const bgColors = ["#f59e0b", "#6366f1", "#06b6d4", "#64748b"];
+  // Neutomni 등급별 컬러 팔레트 (VIP: Cinnabar, 우수: Teal, 일반: Purple, 휴면: Warm Stone)
+  const bgColors = ["#CF1830", "#3EA094", "#502BD8", "#D2CFBF"];
 
   rfmChart = new Chart(ctx, {
     type: "doughnut",
@@ -335,7 +345,7 @@ function renderRFMChart(summary) {
       datasets: [{
         data: values,
         backgroundColor: bgColors,
-        borderColor: "#0f172a",
+        borderColor: "#ffffff",
         borderWidth: 3,
         hoverOffset: 6
       }]
@@ -346,11 +356,16 @@ function renderRFMChart(summary) {
       plugins: {
         legend: {
           position: "bottom",
-          labels: { color: "#cbd5e1", padding: 14, font: { size: 12, weight: "600" } }
+          labels: { color: "#141414", padding: 14, font: { size: 12, weight: "700" } }
         },
         tooltip: {
-          backgroundColor: "rgba(17, 24, 39, 0.95)",
+          backgroundColor: "#141414",
+          titleColor: "#ffffff",
+          bodyColor: "#f6f5f0",
+          borderColor: "rgba(255,255,255,0.15)",
+          borderWidth: 1,
           padding: 12,
+          cornerRadius: 8,
           callbacks: {
             label: function(ctx) {
               const pct = ((ctx.raw / total) * 100).toFixed(1);
@@ -365,7 +380,7 @@ function renderRFMChart(summary) {
   });
 }
 
-// 5-3. 상품군별 기여도 차트 (가로 막대)
+// 5-3. 상품군별 기여도 차트 (가로 막대 - Neutomni Dark & Teal Palette)
 function renderCategoryChart(summary) {
   const canvas = document.getElementById("categoryChart");
   if (!canvas) return;
@@ -387,9 +402,9 @@ function renderCategoryChart(summary) {
       datasets: [{
         label: isSales ? "매출액 (원)" : "판매수량 (개)",
         data: items.map(i => i.val),
-        backgroundColor: isSales ? "rgba(99, 102, 241, 0.85)" : "rgba(16, 185, 129, 0.85)",
-        hoverBackgroundColor: isSales ? "#818cf8" : "#34d399",
-        borderRadius: 6
+        backgroundColor: isSales ? "#141414" : "#3EA094",
+        hoverBackgroundColor: isSales ? "#CF1830" : "#2F8075",
+        borderRadius: 4
       }]
     },
     options: {
@@ -399,8 +414,13 @@ function renderCategoryChart(summary) {
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: "rgba(17, 24, 39, 0.95)",
+          backgroundColor: "#141414",
+          titleColor: "#ffffff",
+          bodyColor: "#f6f5f0",
+          borderColor: "rgba(255,255,255,0.15)",
+          borderWidth: 1,
           padding: 12,
+          cornerRadius: 8,
           callbacks: {
             label: (ctx) => isSales ? ` 매출액: ${formatCurrency(ctx.raw)}` : ` 판매수량: ${formatNumber(ctx.raw)}개`
           }
@@ -408,12 +428,14 @@ function renderCategoryChart(summary) {
       },
       scales: {
         x: {
-          grid: { color: "rgba(255, 255, 255, 0.05)" },
+          grid: { color: "rgba(20, 20, 20, 0.05)" },
           ticks: {
+            color: "#575757",
+            font: { family: "'Space Grotesk', sans-serif" },
             callback: (v) => isSales ? (v / 100000000).toFixed(1) + "억" : formatNumber(v)
           }
         },
-        y: { grid: { display: false }, ticks: { color: "#e2e8f0" } }
+        y: { grid: { display: false }, ticks: { color: "#141414", font: { weight: "600" } } }
       }
     }
   });
@@ -438,8 +460,8 @@ function renderChannelStoreChart(summary) {
         labels: ["오프라인 매장", "온라인몰"],
         datasets: [{
           data: hasData ? [offlineSales, onlineSales] : [1, 0],
-          backgroundColor: ["#6366f1", "#06b6d4"],
-          borderColor: "#0f172a",
+          backgroundColor: ["#141414", "#3EA094"],
+          borderColor: "#ffffff",
           borderWidth: 3,
           hoverOffset: 6
         }]
@@ -450,11 +472,16 @@ function renderChannelStoreChart(summary) {
         plugins: {
           legend: {
             position: "bottom",
-            labels: { color: "#cbd5e1", padding: 14, font: { size: 12, weight: "600" } }
+            labels: { color: "#141414", padding: 14, font: { size: 12, weight: "700" } }
           },
           tooltip: {
-            backgroundColor: "rgba(17, 24, 39, 0.95)",
+            backgroundColor: "#141414",
+            titleColor: "#ffffff",
+            bodyColor: "#f6f5f0",
+            borderColor: "rgba(255,255,255,0.15)",
+            borderWidth: 1,
             padding: 12,
+            cornerRadius: 8,
             callbacks: {
               label: function(ctx) {
                 const total = (onlineSales + offlineSales) || 1;
@@ -468,7 +495,7 @@ function renderChannelStoreChart(summary) {
       }
     });
   } else {
-    // 점포 랭킹 막대 차트
+    // 점포 랭킹 막대 차트 (Neutomni Accent Palette)
     const items = Object.entries(summary.storeMap).map(([st, val]) => ({
       st,
       sales: val.sales
@@ -483,8 +510,8 @@ function renderChannelStoreChart(summary) {
         datasets: [{
           label: "오프라인 매출액",
           data: top5.map(i => i.sales),
-          backgroundColor: ["#38bdf8", "#818cf8", "#a78bfa", "#f472b6", "#fb923c"],
-          borderRadius: 8
+          backgroundColor: ["#141414", "#CF1830", "#3EA094", "#502BD8", "#FA5D29"],
+          borderRadius: 4
         }]
       },
       options: {
@@ -493,18 +520,27 @@ function renderChannelStoreChart(summary) {
         plugins: {
           legend: { display: false },
           tooltip: {
-            backgroundColor: "rgba(17, 24, 39, 0.95)",
+            backgroundColor: "#141414",
+            titleColor: "#ffffff",
+            bodyColor: "#f6f5f0",
+            borderColor: "rgba(255,255,255,0.15)",
+            borderWidth: 1,
             padding: 12,
+            cornerRadius: 8,
             callbacks: {
               label: (ctx) => ` 연간 매출: ${formatCurrency(ctx.raw)}`
             }
           }
         },
         scales: {
-          x: { grid: { display: false }, ticks: { color: "#cbd5e1" } },
+          x: { grid: { display: false }, ticks: { color: "#141414", font: { weight: "600" } } },
           y: {
-            grid: { color: "rgba(255, 255, 255, 0.05)" },
-            ticks: { callback: (v) => (v / 100000000).toFixed(1) + "억" }
+            grid: { color: "rgba(20, 20, 20, 0.05)" },
+            ticks: {
+              color: "#575757",
+              font: { family: "'Space Grotesk', sans-serif" },
+              callback: (v) => (v / 100000000).toFixed(1) + "억"
+            }
           }
         }
       }
@@ -729,6 +765,11 @@ function setupEventListeners() {
 
 // 10. 초기화 실행
 document.addEventListener("DOMContentLoaded", () => {
+  if (typeof Chart !== "undefined") {
+    Chart.defaults.font.family = "'Inter Tight', -apple-system, BlinkMacSystemFont, sans-serif";
+    Chart.defaults.color = "#141414";
+  }
   setupEventListeners();
   refreshDashboard();
 });
+

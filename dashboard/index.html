@@ -3,51 +3,55 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>장마트(JANG MART) 2025 경영 실적 모니터링 대시보드</title>
-  <meta name="description" content="장마트 2025년도 연간 실적 동적 필터링 대시보드 - 다차원 조건 검색, 5대 KPI, RFM 고객 세그먼트 분석, 인터랙티브 차트, CSV 다운로드">
+  <title>장마트(JANG MART) 2025 경영 실적 모니터링 대시보드 — Neutomni Edition</title>
+  <meta name="description" content="장마트 2025년도 연간 실적 동적 필터링 대시보드 - Neutomni Awwwards SOTD 에디토리얼 스타일, 다차원 조건 검색, 5대 KPI, RFM 고객 세그먼트 분석, 인터랙티브 차트">
   
-  <!-- Pretendard 폰트 CDN -->
+  <!-- Pretendard & Google Fonts -->
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400;1,6..72,600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
   
-  <!-- 분리된 전용 CSS 스타일시트 -->
+  <!-- Neutomni 에디토리얼 CSS 스타일시트 -->
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <div class="dashboard-container">
     
-    <!-- 1. 헤더 영역 -->
+    <!-- 1. 헤더 영역 (Neutomni Studio Header) -->
     <header class="header-card" id="mainHeader">
       <div class="brand-wrapper">
         <div class="brand-icon">🛒</div>
         <div class="brand-title">
-          <h1>장마트(JANG MART) 경영 실적 대시보드</h1>
-          <p>2025년도 연간 구매 데이터 및 9회차 RFM 고객 가치 세그먼트 통합 모니터링</p>
+          <div class="brand-meta-tag">[ JANG MART · EXECUTIVE INTELLIGENCE ]</div>
+          <h1>장마트 경영 실적 <span class="editorial-italic">Dashboard</span></h1>
+          <p>2025년도 연간 구매 빅데이터 및 9회차 RFM 고객 가치 세그먼트 통합 분석</p>
         </div>
       </div>
       
       <div class="header-actions">
-        <span class="badge badge-live">
+        <span class="badge-live">
           <span class="pulse-dot"></span>
-          실적 모니터링 활성
+          LIVE FEED
         </span>
         <button class="btn-action btn-primary" id="btnExportCSV" title="현재 필터링된 집계 데이터 엑셀 CSV로 저장">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
             <polyline points="7 10 12 15 17 10"></polyline>
             <line x1="12" y1="15" x2="12" y2="3"></line>
           </svg>
-          CSV 다운로드
+          CSV 내보내기
         </button>
         <button class="btn-action" id="btnPrintReport" title="보고서 인쇄 및 PDF 저장">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="6 9 6 2 18 2 18 9"></polyline>
             <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
             <rect x="6" y="14" width="12" height="8"></rect>
           </svg>
-          인쇄 / PDF 저장
+          인쇄 / PDF
         </button>
         <button class="btn-action" id="refreshBtn" title="대시보드 새로고침">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="23 4 23 10 17 10"></polyline>
             <polyline points="1 20 1 14 7 14"></polyline>
             <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
@@ -57,13 +61,13 @@
       </div>
     </header>
 
-    <!-- 2. 다차원 동적 필터바 영역 (고객 등급 필터 추가) -->
+    <!-- 2. 다차원 동적 필터바 영역 -->
     <section class="filter-bar-card" aria-label="데이터 다차원 필터링">
       <div class="filter-controls">
         
         <!-- 점포 선택 -->
         <div class="filter-group">
-          <label class="filter-label" for="filterStore">🏬 점포</label>
+          <label class="filter-label" for="filterStore">STORE [ 점포 ]</label>
           <select id="filterStore" class="filter-select">
             <option value="all">전체 점포 (온/오프라인)</option>
             <option value="online">온라인몰 전용</option>
@@ -83,9 +87,9 @@
 
         <!-- 기준 월 선택 -->
         <div class="filter-group">
-          <label class="filter-label" for="filterMonth">📅 기준 월</label>
+          <label class="filter-label" for="filterMonth">MONTH [ 기준 월 ]</label>
           <select id="filterMonth" class="filter-select">
-            <option value="all">1~12월 전체 (연간)</option>
+            <option value="all">1~12월 전체 (연간 누적)</option>
             <option value="1">1월</option>
             <option value="2">2월</option>
             <option value="3">3월</option>
@@ -103,9 +107,9 @@
 
         <!-- 상품군 선택 -->
         <div class="filter-group">
-          <label class="filter-label" for="filterCategory">🏷️ 상품군</label>
+          <label class="filter-label" for="filterCategory">CATEGORY [ 상품군 ]</label>
           <select id="filterCategory" class="filter-select">
-            <option value="all">전체 상품군 (10개)</option>
+            <option value="all">전체 상품군 (10개 카테고리)</option>
             <option value="소형가전">소형가전</option>
             <option value="침구홈">침구홈</option>
             <option value="신선식품">신선식품</option>
@@ -119,11 +123,11 @@
           </select>
         </div>
 
-        <!-- 👑 신규: 고객 등급 선택 (9회차 RFM 연계) -->
+        <!-- 👑 고객 등급 선택 (9회차 RFM 연계) -->
         <div class="filter-group">
-          <label class="filter-label" for="filterGrade">👑 고객 등급</label>
+          <label class="filter-label" for="filterGrade">RFM SEGMENT [ 고객 등급 ]</label>
           <select id="filterGrade" class="filter-select">
-            <option value="all">전체 고객 등급</option>
+            <option value="all">전체 고객 등급 (모든 세그먼트)</option>
             <option value="VIP 단골">VIP 단골 (상위 17.6%)</option>
             <option value="우수 고객">우수 고객 (28.1%)</option>
             <option value="일반 고객">일반 고객 (24.7%)</option>
@@ -135,15 +139,15 @@
 
       <div class="filter-status">
         <span class="filter-badge" id="filterStatusBadge">적용 조건: 전체 점포 · 1~12월 전체 · 전체 상품군 · 전체 등급</span>
-        <button class="btn-reset" id="btnResetFilters" title="모든 필터를 기본값으로 리셋">초기화</button>
+        <button class="btn-reset" id="btnResetFilters" title="모든 필터를 기본값으로 리셋">[ 초기화 ]</button>
       </div>
     </section>
 
-    <!-- 3. 5대 핵심 실적 KPI 카드 영역 -->
+    <!-- 3. 5대 핵심 실적 KPI 카드 영역 (Neutomni Index System) -->
     <section class="kpi-section" aria-label="5대 핵심 성과 지표">
       
       <!-- KPI 1: 총 매출액 -->
-      <article class="kpi-card card-sales" id="cardSales">
+      <article class="kpi-card card-sales" id="cardSales" data-index="[ 01 ]">
         <div class="kpi-top">
           <span class="kpi-label">조건부 총 매출액</span>
           <div class="kpi-icon icon-sales">💰</div>
@@ -159,7 +163,7 @@
       </article>
 
       <!-- KPI 2: 총 주문 건수 -->
-      <article class="kpi-card card-orders" id="cardOrders">
+      <article class="kpi-card card-orders" id="cardOrders" data-index="[ 02 ]">
         <div class="kpi-top">
           <span class="kpi-label">총 주문 건수</span>
           <div class="kpi-icon icon-orders">📦</div>
@@ -175,7 +179,7 @@
       </article>
 
       <!-- KPI 3: 평균 객단가 -->
-      <article class="kpi-card card-aov" id="cardAov">
+      <article class="kpi-card card-aov" id="cardAov" data-index="[ 03 ]">
         <div class="kpi-top">
           <span class="kpi-label">평균 객단가 (AOV)</span>
           <div class="kpi-icon icon-aov">🧾</div>
@@ -189,7 +193,7 @@
       </article>
 
       <!-- KPI 4: 총 판매수량 & 고객 수 -->
-      <article class="kpi-card card-cust" id="cardCustomers">
+      <article class="kpi-card card-cust" id="cardCustomers" data-index="[ 04 ]">
         <div class="kpi-top">
           <span class="kpi-label">총 판매수량</span>
           <div class="kpi-icon icon-cust">🛍️</div>
@@ -199,13 +203,13 @@
           <span class="kpi-unit">개</span>
         </div>
         <div class="kpi-sub">
-          <span>월별 합산 고객수</span>
+          <span>합산 구매 고객수</span>
           <span class="highlight" id="kpi-cust-sub">0명</span>
         </div>
       </article>
 
       <!-- KPI 5: 반품률 & 온라인 비중 -->
-      <article class="kpi-card card-channel" id="cardChannel">
+      <article class="kpi-card card-channel" id="cardChannel" data-index="[ 05 ]">
         <div class="kpi-top">
           <span class="kpi-label">반품률 / 온라인비중</span>
           <div class="kpi-icon icon-channel">⚖️</div>
@@ -214,7 +218,7 @@
           <span class="kpi-value" id="kpi-return-rate">0.0%</span>
         </div>
         <div class="kpi-sub">
-          <span>온라인 비중</span>
+          <span>온라인</span>
           <span class="highlight" id="kpi-online-ratio">0.0%</span>
           <span>(<span id="kpi-online-amt">0억</span>)</span>
         </div>
@@ -222,14 +226,14 @@
 
     </section>
 
-    <!-- 4. 메인 분석 차트 영역 (월별 추이 + 👑 RFM 고객 세그먼트 분석) -->
+    <!-- 4. 메인 분석 차트 영역 (월별 추이 + RFM 고객 세그먼트 분석) -->
     <section class="charts-grid" aria-label="상세 실적 차트">
       
       <!-- 월별 실적 추이 -->
       <div class="chart-card">
         <div class="chart-header">
           <div class="chart-title">
-            <h2>월별 실적 추이</h2>
+            <h2>월별 실적 추이 <span class="editorial-italic">Timeline</span></h2>
             <p>선택된 필터 조건에 따른 1월~12월 월별 성장 흐름</p>
           </div>
           <div class="chart-actions" id="monthlyTabs">
@@ -242,11 +246,11 @@
         </div>
       </div>
 
-      <!-- 👑 신규: 9회차 RFM 고객 세그먼트 분석 (도넛/바) -->
+      <!-- 👑 9회차 RFM 고객 세그먼트 분석 -->
       <div class="chart-card">
         <div class="chart-header">
           <div class="chart-title">
-            <h2>👑 RFM 고객 세그먼트 분석</h2>
+            <h2>RFM 고객 세그먼트 <span class="editorial-italic">Segmentation</span></h2>
             <p>고객 등급별 기여도 및 가치 분포</p>
           </div>
           <div class="chart-actions" id="rfmTabs">
@@ -265,7 +269,7 @@
           </div>
           <div class="rfm-pill pill-top2">
             <span class="rfm-pill-title">상위 2개 등급(VIP+우수) 매출</span>
-            <span class="rfm-pill-val">69.4% (20.6억)</span>
+            <span class="rfm-pill-val">69.4% (20.6억 원)</span>
           </div>
         </div>
       </div>
@@ -279,7 +283,7 @@
       <div class="chart-card">
         <div class="chart-header">
           <div class="chart-title">
-            <h2>상품군별 기여도 분석</h2>
+            <h2>상품군별 기여도 <span class="editorial-italic">Categories</span></h2>
             <p>10대 카테고리별 매출액 및 판매수량 랭킹</p>
           </div>
           <div class="chart-actions" id="categoryTabs">
@@ -296,7 +300,7 @@
       <div class="chart-card">
         <div class="chart-header">
           <div class="chart-title">
-            <h2>채널 및 점포 실적</h2>
+            <h2>채널 및 점포 실적 <span class="editorial-italic">Stores & Channels</span></h2>
             <p>온·오프라인 점유율 및 주요 매장 현황</p>
           </div>
           <div class="chart-actions" id="channelStoreTabs">
@@ -315,7 +319,7 @@
     <section class="table-card" aria-label="월별 상세 데이터 표">
       <div class="table-header">
         <div class="chart-title">
-          <h2>📊 월별 실적 상세 데이터</h2>
+          <h2>월별 실적 상세 데이터 <span class="editorial-italic">Data Sheet</span></h2>
           <p>선택된 필터 조건(점포·월·상품군·고객등급)에 따른 월별 세부 지표</p>
         </div>
       </div>
@@ -342,16 +346,16 @@
       </div>
     </section>
 
-    <!-- 7. 핵심 경영 인사이트 요약 -->
+    <!-- 7. 핵심 경영 인사이트 요약 (Neutomni Callouts) -->
     <section class="insights-card" aria-label="경영 인사이트">
       <div class="chart-title">
-        <h2>💡 2025 경영 실적 핵심 인사이트</h2>
+        <h2>2025 경영 실적 핵심 인사이트 <span class="editorial-italic">Key Insights</span></h2>
         <p>데이터 기반 의사결정을 위한 3대 핵심 포인트</p>
       </div>
 
       <div class="insights-grid">
         <div class="insight-item growth">
-          <h3>📈 하반기 폭발적 성장세 (+90%)</h3>
+          <h3>📈 하반기 폭발적 성장세 (+90.1%)</h3>
           <p>
             1월 1.84억 원에서 12월 3.51억 원으로 매출이 <strong>+90.1%</strong> 급증했습니다. 연말 시즌 특수 및 마케팅 효율이 집중된 결과로 지속적인 계절성 프로모션 전략이 유효합니다.
           </p>
@@ -375,7 +379,7 @@
 
     <!-- 8. 푸터 -->
     <footer>
-      <p>© 2025 JANG MART Inc. All rights reserved. | 10회차 웹 대시보드 고도화 프로젝트 (RFM 고객 세그먼트 통합)</p>
+      <p>© 2025 JANG MART Inc. All rights reserved. | Neutomni SOTD Editorial Design System</p>
     </footer>
 
   </div>

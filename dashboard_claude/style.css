@@ -84,6 +84,9 @@ body {
 
 .nowrap { white-space: nowrap; }
 
+/* 인쇄할 때만 보이는 글 */
+.print-only { display: none; }
+
 .page {
   max-width: 1120px;
   margin: 0 auto;
@@ -533,6 +536,7 @@ body {
 
 /* ---- 월별 표 ---- */
 .table-wrap {
+  position: relative; /* 칸 안의 보조 기기용 글자(.sr-only)가 표 상자 밖으로 새지 않게 */
   margin-top: 12px;
   overflow-x: auto;
 }
@@ -636,4 +640,97 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .chart .bar { transition: none; }
+}
+
+/* ---- 인쇄·PDF: A4 가로 2장 (1장 요약·카드·차트, 2장 월별 표) ---- */
+@media print {
+  @page { size: A4 landscape; margin: 12mm; }
+
+  /* 어두운 모드여도 인쇄는 밝은 색으로 */
+  :root,
+  :root:not([data-theme="light"]),
+  :root[data-theme="dark"] {
+    color-scheme: light;
+    --page: #ffffff;
+    --surface: #ffffff;
+    --surface-raised: #ffffff;
+    --text-1: #0b0b0b;
+    --text-2: #52514e;
+    --text-3: #898781;
+    --grid: #e1e0d9;
+    --axis: #c3c2b7;
+    --border: rgba(11, 11, 11, 0.10);
+    --border-strong: rgba(11, 11, 11, 0.22);
+    --accent: #2a78d6;
+    --bar-muted: #86b6ef;
+    --wash: rgba(42, 120, 214, 0.08);
+    --good: #006300;
+    --bad: #c42f2f;
+    --target: #52514e;
+    --warn: #fab219;
+  }
+
+  body { background: #fff; font-size: 13px; }
+  .page { max-width: none; padding: 0; }
+
+  .toolbar,
+  .filters,
+  .tooltip,
+  #link-fallback { display: none !important; }
+
+  .print-only { display: block; }
+  span.print-only { display: inline; }
+  #print-conditions {
+    margin: 8px 0 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-1);
+  }
+
+  * { box-shadow: none !important; }
+  .kpi[aria-pressed="true"] { border: 2px solid var(--accent); }
+
+  .kpi,
+  .summary { break-inside: avoid; }
+
+  .chart { min-height: 0; }
+  .chart svg { width: 100%; height: auto; }
+
+  .table-card { break-before: page; margin-top: 0; }
+  .table-wrap { overflow: visible; }
+  .table-wrap table { min-width: 0; }
+
+
+  /* 한 장에 들어가도록 간격과 크기를 줄여요 (화면 모양은 그대로) */
+  .page-header h1 { margin: 0 0 2px; font-size: 22px; }
+  .page-header { gap: 0; }
+  .subtitle { font-size: 12px; }
+  #print-conditions { margin: 4px 0 8px; }
+  .summary { margin: 0 0 8px; padding: 8px 12px; font-size: 13px; }
+  .kpis { gap: 8px; }
+  .kpi { padding: 8px 10px 8px; }
+  .kpi-value { font-size: 22px; }
+  .spark { display: none; }
+  .kpi-year { margin-top: 2px; padding-top: 4px; }
+  .card { margin-top: 8px; padding: 10px 14px 10px; }
+  .chart-card { break-inside: avoid; }
+  .chart { margin-top: 6px; }
+  .chart svg { max-height: 230px; }
+  .table-wrap { margin-top: 6px; }
+  .table-wrap th,
+  .table-wrap td { padding: 4px 10px; }
+  .table-wrap table { font-size: 12px; }
+  .page-footer { margin-top: 8px; }
+
+  .chart .bar,
+  .chart .target-mark,
+  .lg-bar,
+  .lg-line,
+  .lv-icon,
+  .lv,
+  .spark-dot,
+  .table-wrap tbody tr.is-selected {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
 }
