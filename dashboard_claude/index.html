@@ -1,0 +1,64 @@
+<!doctype html>
+<!-- 작성: Claude (Anthropic) · 장마트 실적 모니터링 대시보드 -->
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>장마트 실적 모니터링</title>
+  <meta name="description" content="장마트 2025년 월별 핵심 실적 5개: 매출, 구매 고객 수, 주문 건수, 객단가, 반품률">
+  <meta name="generator" content="Claude (Anthropic)">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='1' y='8' width='4' height='7' rx='1' fill='%2386b6ef'/%3E%3Crect x='6' y='5' width='4' height='10' rx='1' fill='%2386b6ef'/%3E%3Crect x='11' y='1' width='4' height='14' rx='1' fill='%232a78d6'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="page">
+    <!-- 제목과 설명을 바꾸려면 이 부분을 고치세요 -->
+    <header class="page-header">
+      <p class="eyebrow">장마트 · 2025년 1~12월</p>
+      <h1>실적 모니터링</h1>
+      <p class="subtitle">핵심 지표 5개를 월별로 봅니다. 반품을 뺀 정상 거래 기준이에요.</p>
+    </header>
+
+    <section class="filters" aria-label="조회 조건">
+      <label class="field">
+        <span>점포</span>
+        <select id="segment"></select>
+      </label>
+      <label class="field">
+        <span>기준 월</span>
+        <select id="month"></select>
+      </label>
+      <p class="filter-note" id="filter-note" aria-live="polite"></p>
+    </section>
+
+    <section class="kpis" id="kpis" aria-label="핵심 지표 5개. 카드를 누르면 아래 차트가 그 지표로 바뀌어요"></section>
+
+    <section class="card chart-card" id="chart-card">
+      <div class="card-head">
+        <h2 id="chart-title">월별 추이</h2>
+        <p class="card-sub" id="chart-sub"></p>
+      </div>
+      <div class="chart" id="chart"></div>
+      <div class="tooltip" id="tooltip" hidden></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>월별 상세</h2>
+        <p class="card-sub">기준 월은 파란 줄, 차트에 그린 지표는 굵은 글씨예요. 연간 구매 고객 수는 한 해 동안 한 번 이상 산 고객 수(중복 제외)예요.</p>
+      </div>
+      <div class="table-wrap">
+        <table id="table"></table>
+      </div>
+    </section>
+
+    <footer class="page-footer">
+      <p>데이터: 장마트 구매 데이터 2025-01-01 ~ 2025-12-31 (교육용 합성 데이터). 객단가 = 매출 ÷ 주문 건수. 반품률 = 반품 금액 ÷ (정상 + 반품) 금액.</p>
+      <p>만든 도구: Claude (Anthropic)</p>
+    </footer>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

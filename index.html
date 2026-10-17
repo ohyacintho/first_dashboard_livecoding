@@ -9,7 +9,7 @@
   <!-- Pretendard 폰트 CDN -->
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
   
-  <!-- 커스텀 스타일시트 -->
+  <!-- 분리된 전용 CSS 스타일시트 -->
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -134,7 +134,7 @@
       <article class="kpi-card card-sales" id="cardSales">
         <div class="kpi-top">
           <span class="kpi-label">조건부 총 매출액</span>
-          <div class="kpi-icon" style="color: #38bdf8;">💰</div>
+          <div class="kpi-icon icon-sales">💰</div>
         </div>
         <div class="kpi-value-wrap">
           <span class="kpi-value" id="kpi-sales">0.0</span>
@@ -150,7 +150,7 @@
       <article class="kpi-card card-orders" id="cardOrders">
         <div class="kpi-top">
           <span class="kpi-label">총 주문 건수</span>
-          <div class="kpi-icon" style="color: #34d399;">📦</div>
+          <div class="kpi-icon icon-orders">📦</div>
         </div>
         <div class="kpi-value-wrap">
           <span class="kpi-value" id="kpi-orders">0</span>
@@ -166,7 +166,7 @@
       <article class="kpi-card card-aov" id="cardAov">
         <div class="kpi-top">
           <span class="kpi-label">평균 객단가 (AOV)</span>
-          <div class="kpi-icon" style="color: #f59e0b;">🧾</div>
+          <div class="kpi-icon icon-aov">🧾</div>
         </div>
         <div class="kpi-value-wrap">
           <span class="kpi-value" id="kpi-aov">₩0</span>
@@ -180,7 +180,7 @@
       <article class="kpi-card card-cust" id="cardCustomers">
         <div class="kpi-top">
           <span class="kpi-label">총 판매수량</span>
-          <div class="kpi-icon" style="color: #a855f7;">🛍️</div>
+          <div class="kpi-icon icon-cust">🛍️</div>
         </div>
         <div class="kpi-value-wrap">
           <span class="kpi-value" id="kpi-qty">0</span>
@@ -196,7 +196,7 @@
       <article class="kpi-card card-channel" id="cardChannel">
         <div class="kpi-top">
           <span class="kpi-label">반품률 / 온라인비중</span>
-          <div class="kpi-icon" style="color: #06b6d4;">⚖️</div>
+          <div class="kpi-icon icon-channel">⚖️</div>
         </div>
         <div class="kpi-value-wrap">
           <span class="kpi-value" id="kpi-return-rate">0.0%</span>
@@ -280,7 +280,7 @@
 
     </section>
 
-    <!-- 6. 상세 데이터 그리드 테이블 (신규 기능) -->
+    <!-- 6. 상세 데이터 그리드 테이블 -->
     <section class="table-card" aria-label="월별 상세 데이터 표">
       <div class="table-header">
         <div class="chart-title">
@@ -351,9 +351,9 @@
 
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <!-- 다차원 집계 데이터 (1,080 rows) -->
+  <!-- 분리된 JS 데이터 모듈 -->
   <script src="data.js"></script>
-  <!-- 대시보드 고도화 로직 스크립트 -->
+  <!-- 분리된 JS 로직 모듈 -->
   <script src="app.js"></script>
 </body>
 </html>

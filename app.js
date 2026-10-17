@@ -1,9 +1,9 @@
 /**
- * 장마트(JANG MART) 2025 경영 실적 모니터링 대시보드 로직 (고도화 버전)
+ * 장마트(JANG MART) 2025 경영 실적 모니터링 대시보드 로직
  * 
  * - 다차원 동적 필터링 (점포 / 기준 월 / 상품군)
  * - 실시간 KPI 및 4종 인터랙티브 차트 리렌더링
- * - 월별 상세 실적 데이터 테이블 동적 렌더링
+ * - 월별 상세 실적 데이터 테이블 동적 렌더링 (순수 CSS 클래스 기반)
  * - 엑셀 호환 CSV 데이터 내보내기 (UTF-8 BOM)
  * - 인쇄 / PDF 보고서 내보내기 최적화
  */
@@ -198,9 +198,15 @@ function updateKPIView(summary) {
 }
 
 function updateFilterStatusBadge() {
-  const storeText = document.getElementById("filterStore").selectedOptions[0].text;
-  const monthText = document.getElementById("filterMonth").selectedOptions[0].text;
-  const categoryText = document.getElementById("filterCategory").selectedOptions[0].text;
+  const storeSelect = document.getElementById("filterStore");
+  const monthSelect = document.getElementById("filterMonth");
+  const categorySelect = document.getElementById("filterCategory");
+
+  if (!storeSelect || !monthSelect || !categorySelect) return;
+  
+  const storeText = storeSelect.selectedOptions[0].text;
+  const monthText = monthSelect.selectedOptions[0].text;
+  const categoryText = categorySelect.selectedOptions[0].text;
   
   const statusEl = document.getElementById("filterStatusBadge");
   if (statusEl) {
@@ -213,7 +219,9 @@ Chart.defaults.color = "#94a3b8";
 Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Pretendard Variable", Pretendard, "Segoe UI", Roboto, sans-serif';
 
 function renderMonthlyChart(summary) {
-  const ctx = document.getElementById("monthlyChart").getContext("2d");
+  const canvas = document.getElementById("monthlyChart");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
   if (monthlyChart) monthlyChart.destroy();
 
   const isSales = dashboardState.monthlyMetric === "sales";
@@ -230,7 +238,6 @@ function renderMonthlyChart(summary) {
     gradient.addColorStop(1, "rgba(6, 182, 212, 0.02)");
   }
 
-  // 특정 월 필터링 시 해당 포인트 하이라이트
   const activeMonth = parseInt(dashboardState.month);
   const pointBg = labels.map((_, i) => (i + 1 === activeMonth) ? "#f43f5e" : (isSales ? "#818cf8" : "#22d3ee"));
   const pointRadius = labels.map((_, i) => (i + 1 === activeMonth) ? 7 : 4);
@@ -281,7 +288,9 @@ function renderMonthlyChart(summary) {
 }
 
 function renderChannelChart(summary) {
-  const ctx = document.getElementById("channelChart").getContext("2d");
+  const canvas = document.getElementById("channelChart");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
   if (channelChart) channelChart.destroy();
 
   const { onlineSales, offlineSales } = summary.kpis;
@@ -325,7 +334,9 @@ function renderChannelChart(summary) {
 }
 
 function renderCategoryChart(summary) {
-  const ctx = document.getElementById("categoryChart").getContext("2d");
+  const canvas = document.getElementById("categoryChart");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
   if (categoryChart) categoryChart.destroy();
 
   const isSales = dashboardState.categoryMetric === "sales";
@@ -334,7 +345,6 @@ function renderCategoryChart(summary) {
     val: isSales ? val.sales : val.qty
   }));
 
-  // 내림차순 정렬
   items.sort((a, b) => b.val - a.val);
 
   categoryChart = new Chart(ctx, {
@@ -377,7 +387,9 @@ function renderCategoryChart(summary) {
 }
 
 function renderStoreChart(summary) {
-  const ctx = document.getElementById("storeChart").getContext("2d");
+  const canvas = document.getElementById("storeChart");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
   if (storeChart) storeChart.destroy();
 
   const items = Object.entries(summary.storeMap).map(([st, val]) => ({
@@ -423,7 +435,7 @@ function renderStoreChart(summary) {
   });
 }
 
-// 6. 상세 데이터 그리드 테이블 렌더링
+// 6. 상세 데이터 그리드 테이블 렌더링 (순수 CSS 클래스 사용)
 function renderDataTable(summary) {
   const tbody = document.getElementById("dataTableBody");
   const tfoot = document.getElementById("dataTableFoot");
@@ -436,19 +448,18 @@ function renderDataTable(summary) {
     const gross = m.sales + m.refund;
     const returnRate = gross > 0 ? ((m.refund / gross) * 100).toFixed(2) : "0.00";
     
-    // 선택된 월 강조
     const isSelected = dashboardState.month !== "all" && parseInt(dashboardState.month) === m.month;
     const tr = document.createElement("tr");
-    if (isSelected) tr.style.backgroundColor = "rgba(99, 102, 241, 0.15)";
+    if (isSelected) tr.classList.add("tr-selected");
 
     tr.innerHTML = `
-      <td style="font-weight: 600;">${m.month}월</td>
-      <td style="color: #38bdf8; font-weight: 600;">${formatCurrency(m.sales)}</td>
-      <td style="color: #f43f5e;">${formatCurrency(m.refund)}</td>
+      <td class="td-month">${m.month}월</td>
+      <td class="td-sales">${formatCurrency(m.sales)}</td>
+      <td class="td-refund">${formatCurrency(m.refund)}</td>
       <td>${formatNumber(m.orders)}건</td>
       <td>${formatNumber(m.qty)}개</td>
       <td>${formatCurrency(aov)}</td>
-      <td style="color: #fbbf24;">${returnRate}%</td>
+      <td class="td-rate">${returnRate}%</td>
     `;
     tbody.appendChild(tr);
   });
@@ -458,13 +469,13 @@ function renderDataTable(summary) {
   if (tfoot) {
     tfoot.innerHTML = `
       <tr>
-        <td>합계 / 평균</td>
+        <td class="td-month">합계 / 평균</td>
         <td>${formatCurrency(kpis.totalSales)}</td>
-        <td style="color: #f43f5e;">${formatCurrency(kpis.totalRefund)}</td>
+        <td class="tfoot-refund">${formatCurrency(kpis.totalRefund)}</td>
         <td>${formatNumber(kpis.totalOrders)}건</td>
         <td>${formatNumber(kpis.totalQty)}개</td>
         <td>${formatCurrency(kpis.aov)}</td>
-        <td style="color: #fbbf24;">${kpis.returnRate}%</td>
+        <td class="tfoot-rate">${kpis.returnRate}%</td>
       </tr>
     `;
   }
@@ -481,7 +492,7 @@ function refreshDashboard() {
   renderDataTable(summary);
 }
 
-// 8. CSV 데이터 내보내기 기능 (UTF-8 BOM으로 한글 엑셀 깨짐 방지)
+// 8. CSV 데이터 내보내기 기능 (UTF-8 BOM)
 function exportToCSV() {
   const summary = getFilteredSummary();
   const headers = ["월", "정상 매출액(원)", "반품 금액(원)", "주문 건수(건)", "판매 수량(개)", "평균 객단가(원)", "반품률(%)"];
@@ -501,7 +512,6 @@ function exportToCSV() {
     ];
   });
 
-  // 합계행 추가
   const { kpis } = summary;
   rows.push([
     "연간합계/평균",
@@ -535,7 +545,6 @@ function exportToCSV() {
 
 // 9. 이벤트 리스너 등록
 function setupEventListeners() {
-  // 필터 드롭다운
   const storeSelect = document.getElementById("filterStore");
   const monthSelect = document.getElementById("filterMonth");
   const categorySelect = document.getElementById("filterCategory");
@@ -561,7 +570,6 @@ function setupEventListeners() {
     });
   }
 
-  // 필터 초기화
   const resetBtn = document.getElementById("btnResetFilters");
   if (resetBtn) {
     resetBtn.addEventListener("click", () => {
@@ -575,7 +583,6 @@ function setupEventListeners() {
     });
   }
 
-  // 차트 탭 전환
   const monthlyTabs = document.querySelectorAll("#monthlyTabs .tab-btn");
   monthlyTabs.forEach(btn => {
     btn.addEventListener("click", () => {
@@ -596,19 +603,16 @@ function setupEventListeners() {
     });
   });
 
-  // CSV 다운로드 버튼
   const exportBtn = document.getElementById("btnExportCSV");
   if (exportBtn) {
     exportBtn.addEventListener("click", exportToCSV);
   }
 
-  // 인쇄 / PDF 저장 버튼
   const printBtn = document.getElementById("btnPrintReport");
   if (printBtn) {
     printBtn.addEventListener("click", () => window.print());
   }
 
-  // 새로고침 버튼
   const refreshBtn = document.getElementById("refreshBtn");
   if (refreshBtn) {
     refreshBtn.addEventListener("click", refreshDashboard);
