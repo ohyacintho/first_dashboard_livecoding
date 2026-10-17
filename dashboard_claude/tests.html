@@ -20,9 +20,17 @@
   <p id="summary">실행 중…</p>
   <ul id="results"></ul>
 
+  <script>
+    // 소스 파일이나 테스트 블록이 맨 위에서 던진 오류를 모아 실패로 셉니다(초록불 착시 방지).
+    window.__testErrors = [];
+    window.onerror = function (msg, src, line) {
+      window.__testErrors.push(String(msg) + (src ? ' (' + String(src).split('/').pop() + ':' + line + ')' : ''));
+    };
+  </script>
   <script src="data.js"></script>
   <script src="kpis.js"></script>
-  <!-- 이후 단계에서 targets.js, share.js를 여기에 추가해요 -->
+  <script src="targets.js"></script>
+  <script src="share.js"></script>
 
   <script>
     (function () {
@@ -32,10 +40,20 @@
       var fail = 0;
       var list = document.getElementById('results');
 
-      function show(x) { try { return JSON.stringify(x); } catch (e) { return String(x); } }
+      function show(x) {
+        if (typeof x === 'number' && !isFinite(x)) return String(x); // NaN, Infinity는 그대로 보여 줘요
+        try { return JSON.stringify(x); } catch (e) { return String(x); }
+      }
+      function isObj(x) { return x !== null && typeof x === 'object'; }
+      // 객체·배열끼리만 JSON으로 비교하고, 나머지는 값 그대로 비교해요(NaN은 NaN끼리만 같아요).
+      function same(a, b) {
+        if (isObj(a) && isObj(b)) return show(a) === show(b);
+        return a === b || (a !== a && b !== b);
+      }
+
       window.test = function (name, fn) { tests.push({ name: name, fn: fn }); };
       window.eq = function (actual, expected) {
-        if (actual !== expected && show(actual) !== show(expected)) {
+        if (!same(actual, expected)) {
           throw new Error('기대 ' + show(expected) + ' / 실제 ' + show(actual));
         }
       };
@@ -45,24 +63,42 @@
         }
       };
 
+      function addRow(ok, text) {
+        var li = document.createElement('li');
+        li.className = ok ? 'pass' : 'fail';
+        li.textContent = text;
+        list.appendChild(li);
+        if (ok) pass++; else fail++;
+      }
+
       window.runTests = function () {
         tests.forEach(function (t) {
-          var li = document.createElement('li');
           try {
             t.fn();
-            pass++;
-            li.className = 'pass';
-            li.textContent = t.name;
+            addRow(true, t.name);
           } catch (e) {
-            fail++;
-            li.className = 'fail';
-            li.textContent = t.name + '\n  ' + (e && e.message ? e.message : e);
+            addRow(false, t.name + '\n  ' + (e && e.message ? e.message : e));
           }
-          list.appendChild(li);
         });
+        window.__testErrors.forEach(function (msg) { addRow(false, '스크립트 오류\n  ' + msg); });
+        if (tests.length === 0) addRow(false, '등록된 테스트가 없어요');
         document.getElementById('summary').textContent = '통과 ' + pass + ' · 실패 ' + fail;
       };
     })();
+  </script>
+
+  <script>
+    // ---- 하네스 자체 점검 ----
+    test('하네스: eq는 NaN·Infinity를 null과 구분', function () {
+      var threw = false;
+      try { eq(NaN, null); } catch (e) { threw = true; }
+      eq(threw, true);
+      threw = false;
+      try { eq(Infinity, null); } catch (e) { threw = true; }
+      eq(threw, true);
+      eq(NaN, NaN);
+      eq([1, 2], [1, 2]);
+    });
   </script>
 
   <script>
@@ -91,6 +127,191 @@
       eq(JM.withUnit(K('sales'), '3.45억'), '3.45억 원');
       eq(JM.withUnit(K('customers'), '4,684'), '4,684명');
     });
+  </script>
+
+  <script>
+    // ---- targets.js ----
+    const T = (key, seg = '전체') => JM.targetsFor(K(key), JM.series(K(key), JANG_MART.values[seg]));
+    const A = (key, seg = '전체') => JM.series(K(key), JANG_MART.values[seg]);
+    test('1~3월 목표 없음', () => { eq(T('sales').slice(0, 3).join(), ',,'); });
+    test('목표 배열은 같은 길이, 1~3월 null', () => {
+      eq(T('sales').length, 12); eq(T('sales')[0], null); eq(T('sales')[2], null);
+    });
+    test('전체 12월 매출 목표·판정', () => {
+      near(T('sales')[11], 328035925, 1);
+      const j = JM.judge(K('sales'), A('sales')[11], T('sales')[11]);
+      eq(j.level, 'good'); near(j.ratio, 105.13, 0.01); eq(j.gap, null);
+      eq(JM.judgeText(K('sales'), j), '✔ 달성 105.1%');
+      eq(JM.targetText(K('sales'), T('sales')[11], 11), '목표 3.28억 원');
+    });
+    test('전체 12월 객단가 근접, 반품률 미달', () => {
+      eq(JM.judge(K('aov'), A('aov')[11], T('aov')[11]).level, 'near');
+      const r = JM.judge(K('returnRate'), A('returnRate')[11], T('returnRate')[11]);
+      eq(r.level, 'bad'); near(r.gap, 0.39, 0.005); eq(r.ratio, null);
+      eq(JM.judgeText(K('returnRate'), r), '✖ 미달 0.39%p 초과');
+      eq(JM.targetText(K('returnRate'), T('returnRate')[11], 11), '목표 1.28% 이하');
+    });
+    test('판정 경계(반올림 전 값)와 판정 문구', () => {
+      eq(JM.judge(K('sales'), 100, 100).level, 'good');
+      eq(JM.judge(K('sales'), 99.999, 100).level, 'near');
+      eq(JM.judge(K('sales'), 95, 100).level, 'near');
+      eq(JM.judge(K('sales'), 94.999, 100).level, 'bad');
+      eq(JM.judge(K('returnRate'), 1, 1).level, 'good');
+      eq(JM.judge(K('returnRate'), 1 / 0.95, 1).level, 'near');
+      eq(JM.judge(K('returnRate'), 1 / 0.95 + 1e-9, 1).level, 'bad');
+      eq(JM.judgeText(K('returnRate'), JM.judge(K('returnRate'), 1.18, 1.28)), '✔ 달성 0.10%p 여유');
+      eq(JM.judgeText(K('aov'), JM.judge(K('aov'), 96.96, 100)), '△ 근접 96.9%');
+      eq(JSON.stringify(JM.LEVELS), '{"good":{"icon":"✔","label":"달성"},"near":{"icon":"△","label":"근접"},"bad":{"icon":"✖","label":"미달"}}');
+    });
+    test('목표 문구', () => {
+      eq(JM.targetText(K('sales'), null, 0), '목표 없음(4월부터)');
+      eq(JM.targetText(K('sales'), null, 2), '목표 없음(4월부터)');
+      eq(JM.targetText(K('customers'), 4684.4, 5), '목표 4,684명');
+    });
+    test('달성 개월 수(전체)', () => {
+      eq(JSON.stringify(JM.achievedCount(K('aov'), A('aov'))), '{"hit":0,"total":9}');
+      eq(JSON.stringify(JM.achievedCount(K('orders'), A('orders'))), '{"hit":9,"total":9}');
+      eq(JSON.stringify(JM.achievedCount(K('sales'), A('sales'))), '{"hit":8,"total":9}');
+    });
+    test('강남점 12월 반품률 미달', () => {
+      eq(JM.judge(K('returnRate'), A('returnRate', '강남점')[11], T('returnRate', '강남점')[11]).level, 'bad');
+    });
+    test('직전 평균 0이면 목표 없음', () => {
+      const vals = [0, 0, 0, 1, 2, 3, 0, 0, 0, 0, 0, 0];
+      const t = JM.targetsFor(K('returnRate'), vals);
+      eq(t[3], null); eq(JM.judge(K('returnRate'), 1, null), null);
+      eq(JM.targetText(K('returnRate'), null, 3), '목표 없음');
+      near(t[4], 1 / 3 * 0.95, 1e-12); eq(t[9], null);
+      eq(JSON.stringify(JM.achievedCount(K('returnRate'), vals)), '{"hit":3,"total":5}');
+    });
+    test('요약 문장', () => {
+      const v = JANG_MART.values['전체'];
+      eq(JM.buildSummary('전체', 12, v), '전체 12월 매출은 3.45억 원으로 목표의 105.1%를 달성했어요. 객단가는 목표의 96.9%, 반품률(1.67%)은 목표(1.28% 이하)를 넘었어요.');
+      eq(JM.buildSummary('전체', 6, v).startsWith('전체 6월 매출은 2.19억 원으로 목표에 조금 못 미쳤어요(목표의 98.3%).'), true);
+      eq(JM.buildSummary('전체', 1, v), '전체 1월 매출은 1.81억 원이에요. 목표는 4월부터 계산돼요.');
+      eq(JM.buildSummary('전체', 2, v), '전체 2월 매출은 1.74억 원으로 전월보다 3.7% 줄었어요. 목표는 4월부터 계산돼요.');
+    });
+    test('요약 문장 갈래(만든 데이터)', () => {
+      // 1~3월 매출 100(목표 105). 4월 매출 s4, 고객 c4로 판정을 바꿔 봐요.
+      const mk = (s4, c4) => ({
+        sales: [100, 100, 100, s4, 0, 0, 0, 0, 0, 0, 0, 0],
+        customers: [10, 10, 10, c4, 0, 0, 0, 0, 0, 0, 0, 0],
+        orders: [10, 10, 10, 11, 1, 1, 1, 1, 1, 1, 1, 1],
+        returnAmount: [5, 5, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        grossAmount: [100, 100, 100, 100, 1, 1, 1, 1, 1, 1, 1, 1],
+        year: {},
+      });
+      eq(JM.buildSummary('X', 4, mk(120, 20)), 'X 4월 매출은 120원으로 목표의 114.2%를 달성했어요. 나머지 지표도 모두 목표를 달성했어요.');
+      eq(JM.buildSummary('X', 4, mk(90, 20)), 'X 4월 매출은 90원으로 목표의 85.7%에 그쳤어요. 객단가는 목표의 77.9%예요.');
+      eq(JM.buildSummary('X', 4, mk(90, 10)), 'X 4월 매출은 90원으로 목표의 85.7%에 그쳤어요. 구매 고객 수는 목표의 95.2%, 객단가는 목표의 77.9%예요.');
+      eq(JM.buildSummary('X', 4, mk(101, 20)).startsWith('X 4월 매출은 101원으로 목표에 조금 못 미쳤어요(목표의 96.1%). '), true);
+      const noTarget = mk(110, 20); noTarget.sales = [0, 0, 0, 110, 0, 0, 0, 0, 0, 0, 0, 0];
+      eq(JM.buildSummary('X', 4, noTarget), 'X 4월 매출은 110원이에요. 이번 달은 목표가 없어요. 나머지 지표는 모두 목표를 달성했어요.');
+      const flat = mk(110, 20); flat.sales = [100, 100, 100, 100, 0, 0, 0, 0, 0, 0, 0, 0];
+      eq(JM.buildSummary('X', 2, flat), 'X 2월 매출은 100원으로 전월과 같아요. 목표는 4월부터 계산돼요.');
+      const up = mk(110, 20); up.sales = [100, 125, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+      eq(JM.buildSummary('X', 2, up), 'X 2월 매출은 125원으로 전월보다 25.0% 늘었어요. 목표는 4월부터 계산돼요.');
+      const fromZero = mk(110, 20); fromZero.sales = [0, 125, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+      eq(JM.buildSummary('X', 2, fromZero), 'X 2월 매출은 125원으로 전월과 같아요. 목표는 4월부터 계산돼요.');
+    });
+    test('나머지 지표 모두 달성: 매출 달성이면 "도", 아니면 "는"', () => {
+      eq(JM.buildSummary('온라인몰', 8, JANG_MART.values['온라인몰']), '온라인몰 8월 매출은 1.05억 원으로 목표의 116.9%를 달성했어요. 나머지 지표도 모두 목표를 달성했어요.');
+      // 매출만 미달이고 나머지 4개는 달성하게 만든 값(객단가 목표 1.74, 4월 객단가 2)
+      const salesMiss = {
+        sales: [1, 1, 298, 72, 0, 0, 0, 0, 0, 0, 0, 0],
+        customers: [10, 10, 10, 20, 0, 0, 0, 0, 0, 0, 0, 0],
+        orders: [1, 1, 100, 36, 1, 1, 1, 1, 1, 1, 1, 1],
+        returnAmount: [5, 5, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        grossAmount: [100, 100, 100, 100, 1, 1, 1, 1, 1, 1, 1, 1],
+        year: {},
+      };
+      eq(JM.buildSummary('X', 4, salesMiss), 'X 4월 매출은 72원으로 목표의 68.5%에 그쳤어요. 나머지 지표는 모두 목표를 달성했어요.');
+    });
+    test('반품률이 둘째 자리까지 같아 보이면 셋째 자리', () => {
+      const text = JM.buildSummary('오프라인 전체', 12, JANG_MART.values['오프라인 전체']);
+      const m = text.match(/반품률\(([\d.]+)%\)은 목표\(([\d.]+)% 이하\)/);
+      eq(!!m, true);
+      eq(m[1] !== m[2], true);
+      eq(m[1] + '/' + m[2], '0.911/0.907');
+      const rr = K('returnRate');
+      const tiny = JM.judgeText(rr, JM.judge(rr, 0.914, 0.911));
+      eq(tiny.indexOf('0.00%p'), -1);
+      eq(tiny, '△ 근접 0.003%p 초과');
+      eq(JM.targetText(rr, 0.9067, 11, 0.9112), '목표 0.907% 이하');
+      eq(JM.targetText(rr, 0.9067, 11), '목표 0.91% 이하');
+      eq(JM.targetText(rr, 1.28, 11, 1.67), '목표 1.28% 이하');
+      eq(JSON.stringify(JM.pairText(rr, 0.9112, 0.9067)), '{"actual":"0.911%","target":"0.907%"}');
+      eq(JSON.stringify(JM.pairText(rr, 1.67, 1.28)), '{"actual":"1.67%","target":"1.28%"}');
+    });
+    test('모든 점포·월 요약 문장에 NaN·Infinity·undefined 없음', () => {
+      let n = 0;
+      JANG_MART.segments.forEach((s) => {
+        for (let m = 1; m <= 12; m++) {
+          const text = JM.buildSummary(s.name, m, JANG_MART.values[s.name]);
+          if (typeof text !== 'string' || /NaN|Infinity|undefined|null/.test(text)) {
+            throw new Error(s.name + ' ' + m + '월: ' + text);
+          }
+          n++;
+        }
+      });
+      eq(n, JANG_MART.segments.length * 12);
+    });
+  </script>
+
+  <script>
+    (function () {
+      const names = JANG_MART.segments.map((s) => s.name);
+      const DEF = '{"segment":"전체","month":12,"kpi":"sales"}';
+      test('주소 읽기: 한글 점포', () => {
+        eq(JSON.stringify(JM.readHash('#store=%EA%B0%95%EB%82%A8%EC%A0%90&month=3&kpi=aov', names)), '{"segment":"강남점","month":3,"kpi":"aov"}');
+      });
+      test('주소 읽기: 잘못된 값은 기본값', () => {
+        eq(JSON.stringify(JM.readHash('#store=없는점&month=13&kpi=x', names)), DEF);
+        eq(JSON.stringify(JM.readHash('', names)), DEF);
+        eq(JM.readHash('#store=수원점&month=0', names).segment, '수원점');
+        eq(JM.readHash('#month=3.5', names).month, 12);
+        eq(JM.readHash('#month=abc', names).month, 12);
+        eq(JM.readHash('#month=12', names).month, 12);
+        eq(JM.readHash('#month=1', names).month, 1);
+      });
+      test('주소 쓰고 다시 읽기', () => {
+        const s = { segment: '오프라인 전체', month: 4, kpi: 'returnRate' };
+        eq(JSON.stringify(JM.readHash(JM.hashFor(s), names)), JSON.stringify(s));
+      });
+      test('replaceState가 던져도 주소 읽기·쓰기는 그대로', () => {
+        const orig = history.replaceState;
+        history.replaceState = () => { throw new Error('막힘'); };
+        try {
+          eq(JM.hashFor({ segment: '강남점', month: 3, kpi: 'aov' }), '#store=%EA%B0%95%EB%82%A8%EC%A0%90&month=3&kpi=aov');
+          eq(JM.readHash('#month=3', names).month, 3);
+        } finally {
+          history.replaceState = orig;
+        }
+      });
+      test('기본 상태와 링크 복사 함수', () => {
+        eq(JSON.stringify(JM.DEFAULT_STATE), DEF);
+        eq(typeof JM.copyLink, 'function');
+      });
+    })();
+  </script>
+
+  <script>
+    (function () {
+      test('CSV 모양', () => {
+        const csv = JM.buildCsv('전체', JANG_MART.values['전체']);
+        eq(csv[0], '﻿');
+        const rows = csv.slice(1).split('\r\n').filter(Boolean).map((r) => r.split(','));
+        eq(rows.length, 14); eq(rows[0].length, 21);
+        eq(rows[0].slice(0, 5).join('|'), '월|매출|매출 목표|매출 달성률(%)|매출 판정');
+        eq(rows[12].slice(0, 5).join('|'), '12월|344868700|328035925|105.13|달성');
+        eq(rows[1].slice(0, 5).join('|'), '1월|180997700|||');
+        eq(rows[13][0], '연간'); eq(rows[13][4], '달성 8/9개월');
+      });
+      test('CSV에 NaN·Infinity 없음(모든 점포)', () => {
+        JANG_MART.segments.forEach((s) => eq(/NaN|Infinity|undefined/.test(JM.buildCsv(s.name, JANG_MART.values[s.name])), false));
+      });
+      test('CSV 파일 이름', () => { eq(JM.csvFileName('강남점'), '장마트_실적_강남점_2025.csv'); });
+    })();
   </script>
 
   <script>window.runTests();</script>

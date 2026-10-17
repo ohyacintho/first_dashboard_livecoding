@@ -11,10 +11,11 @@
   const SVG_NS = 'http://www.w3.org/2000/svg';
   const MONTH_COUNT = 12;
 
-  // 처음 열었을 때 보여 줄 조건
-  const state = { segment: '전체', month: 12, kpi: 'sales' };
-
   const JM = window.JM;
+
+  // 처음 열었을 때 보여 줄 조건: 주소 해시에 담긴 값을 쓰고, 없거나 틀리면 기본값
+  const segmentNames = DATA ? DATA.segments.map((s) => s.name) : [];
+  const state = JM.readHash(location.hash, segmentNames);
   const { KPIS, withUnit } = JM;
 
   // ---- 도우미 -------------------------------------------------------------
@@ -131,6 +132,32 @@
     return box;
   }
 
+  // 한 줄 요약
+  function renderSummary() {
+    document.getElementById('summary').textContent = JM.buildSummary(state.segment, state.month, segmentValues());
+  }
+
+  // 카드의 목표 줄: '✔ 달성 105.1% · 목표 3.28억 원'. 목표가 없으면 '목표 없음(4월부터)'만
+  function targetRow(kpi, values, i) {
+    const row = el('span', 'kpi-target');
+    const target = JM.targetsFor(kpi, values)[i];
+    const j = JM.judge(kpi, values[i], target);
+    const tText = JM.targetText(kpi, target, i, values[i]);
+    if (!j) {
+      row.classList.add('is-none');
+      row.appendChild(el('span', 'kpi-goal', tText));
+      return row;
+    }
+    const level = JM.LEVELS[j.level];
+    const rest = JM.judgeText(kpi, j).slice(level.icon.length + 1);
+    const icon = el('span', 'lv-icon lv-' + j.level, level.icon);
+    icon.setAttribute('aria-hidden', 'true');
+    const judged = el('span', 'kpi-judge');
+    judged.append(icon, ' ', el('span', 'kpi-judge-text', rest));
+    row.append(judged, ' · ', el('span', 'kpi-goal', tText));
+    return row;
+  }
+
   function renderKpis() {
     const host = document.getElementById('kpis');
     host.replaceChildren();
@@ -155,7 +182,7 @@
       const year = el('span', 'kpi-year', kpi.yearLabel + ' ');
       year.appendChild(el('span', 'nowrap', withUnit(kpi, kpi.short(kpi.year(segmentValues())))));
 
-      card.append(label, value, changeRow('kpi-delta', kpi, values, i), sparkline(values, i), year);
+      card.append(label, value, changeRow('kpi-delta', kpi, values, i), targetRow(kpi, values, i), sparkline(values, i), year);
       host.appendChild(card);
     });
   }
@@ -183,15 +210,32 @@
       ' V' + base + ' Z';
   }
 
+  // 범례: '■ 실적'과 '─ 목표'(반품률은 '─ 목표(상한)'). 기호는 막대·눈금과 같은 색
+  function renderLegend(kpi) {
+    const item = (swatch, text) => {
+      const li = el('li', 'lg-item');
+      const mark = el('span', swatch);
+      mark.setAttribute('aria-hidden', 'true');
+      li.append(mark, el('span', null, text));
+      return li;
+    };
+    document.getElementById('legend').replaceChildren(
+      item('lg-bar', '실적'),
+      item('lg-line', kpi.better === 'down' ? '목표(상한)' : '목표')
+    );
+  }
+
   function renderChart() {
     const kpi = currentKpi();
     const values = series(kpi);
+    const targets = JM.targetsFor(kpi, values);
     const sel = state.month - 1;
     const host = document.getElementById('chart');
 
     document.getElementById('chart-title').textContent = kpi.label + ' 월별 추이';
     document.getElementById('chart-sub').textContent =
       state.segment + ' · ' + (kpi.hint ? kpi.hint + ' · ' : '') + '막대를 누르면 기준 월이 바뀌어요';
+    renderLegend(kpi);
 
     const width = host.clientWidth;
     if (!width) return;
@@ -201,7 +245,8 @@
     const plotH = height - m.top - m.bottom;
     const slot = plotW / MONTH_COUNT;
     const barW = Math.min(24, slot * 0.56);
-    const ticks = niceTicks(Math.max(...values), 4);
+    // 세로축 최댓값은 실적과 목표 중 큰 값
+    const ticks = niceTicks(Math.max(...values, ...targets.filter((t) => t != null)), 4);
     const top = ticks[ticks.length - 1];
     const y = (v) => m.top + plotH * (1 - v / top);
     const cx = (i) => m.left + slot * (i + 0.5);
@@ -236,8 +281,18 @@
 
     root.appendChild(svg('line', { class: 'baseline', x1: m.left, x2: width - m.right, y1: Math.round(base) + 0.5, y2: Math.round(base) + 0.5 }));
 
+    // 목표가 있는 달마다 막대 양옆으로 튀어나오는 가로 눈금(기준 월과 상관없이 모두)
+    targets.forEach((t, i) => {
+      if (t == null) return;
+      const ty = y(t);
+      const half = barW / 2 + 4;
+      root.appendChild(svg('line', { class: 'target-mark', x1: cx(i) - half, x2: cx(i) + half, y1: ty, y2: ty }));
+    });
+
     // 기준 월 막대에만 값을 붙입니다. 나머지 값은 툴팁과 표에 있어요.
-    const valueLabel = svg('text', { class: 'value-label', x: cx(sel), y: y(values[sel]) - 8, 'text-anchor': 'middle' });
+    // 목표 눈금이 막대보다 높으면 눈금 위에 둬서 겹치지 않게 해요.
+    const labelTop = Math.min(y(values[sel]), targets[sel] == null ? Infinity : y(targets[sel]));
+    const valueLabel = svg('text', { class: 'value-label', x: cx(sel), y: labelTop - 8, 'text-anchor': 'middle' });
     valueLabel.textContent = withUnit(kpi, kpi.short(values[sel]));
     root.appendChild(valueLabel);
 
@@ -274,17 +329,25 @@
     const card = document.getElementById('chart-card');
     const host = document.getElementById('chart');
 
+    // 목표가 있으면 '목표 3.28억 원 · ✔ 달성 105.1%', 없으면 '목표 없음(4월부터)'만
+    const target = JM.targetsFor(kpi, values)[i];
+    const j = JM.judge(kpi, values[i], target);
+    const goalText = j
+      ? JM.targetText(kpi, target, i, values[i]) + ' · ' + JM.judgeText(kpi, j)
+      : JM.targetText(kpi, null, i);
+
     tip.replaceChildren(
       el('div', 'tt-title', yearText + '년 ' + (i + 1) + '월 · ' + state.segment),
       el('div', 'tt-value', withUnit(kpi, kpi.full(values[i]))),
-      changeRow('tt-delta', kpi, values, i)
+      changeRow('tt-delta', kpi, values, i),
+      el('div', 'tt-target', goalText)
     );
     tip.hidden = false;
 
     const cardBox = card.getBoundingClientRect();
     const hostBox = host.getBoundingClientRect();
     const barX = hostBox.left - cardBox.left + layout.cx(i);
-    const barTop = hostBox.top - cardBox.top + layout.y(values[i]);
+    const barTop = hostBox.top - cardBox.top + layout.y(target == null ? values[i] : Math.max(values[i], target));
     const left = Math.max(8, Math.min(barX - tip.offsetWidth / 2, card.clientWidth - tip.offsetWidth - 8));
     let top = barTop - tip.offsetHeight - 14;
     if (top < 8) top = barTop + 14;
@@ -309,11 +372,44 @@
 
     const caption = el('caption', 'sr-only', state.segment + ' 월별 실적 표');
 
+    // 지표마다 12개월 값·목표·판정을 한 번씩만 계산해 둬요.
+    const rows = KPIS.map((kpi) => {
+      const values = series(kpi);
+      const targets = JM.targetsFor(kpi, values);
+      return {
+        kpi: kpi,
+        values: values,
+        targets: targets,
+        judges: values.map((val, i) => JM.judge(kpi, val, targets[i])),
+        count: JM.achievedCount(kpi, values),
+      };
+    });
+    const chartRow = rows.find((r) => r.kpi.key === state.kpi);
+    const chartKpi = chartRow.kpi;
+
+    // 차트 지표의 목표·달성률 열. 목표가 없으면 '–'
+    const targetCell = (tag, text) => {
+      const c = el(tag, 'is-target', text);
+      if (tag === 'th') c.scope = 'col';
+      return c;
+    };
+    // 달성률 칸 글자: 오를수록 좋은 지표는 '105.1%', 반품률은 '0.39%p 초과' / '0.10%p 여유'
+    const rateText = (kpi, j) => {
+      if (!j) return '–';
+      if (kpi.better === 'up') return JM.fmt.pctFloor1(j.ratio);
+      const level = JM.LEVELS[j.level];
+      return JM.judgeText(kpi, j).slice(level.icon.length + 1 + level.label.length + 1);
+    };
+
     const headRow = el('tr');
     const monthHead = el('th', null, '월');
     monthHead.scope = 'col';
     headRow.appendChild(monthHead);
     KPIS.forEach((kpi) => headRow.appendChild(cell('th', kpi, kpi.label + '(' + kpi.unit + ')')));
+    headRow.append(
+      targetCell('th', chartKpi.label + ' 목표'),
+      targetCell('th', chartKpi.label + ' 달성률')
+    );
     const thead = el('thead');
     thead.appendChild(headRow);
 
@@ -323,7 +419,23 @@
       const monthCell = el('th', null, i + 1 + '월');
       monthCell.scope = 'row';
       row.appendChild(monthCell);
-      KPIS.forEach((kpi) => row.appendChild(cell('td', kpi, kpi.full(kpi.month(v, i)))));
+      rows.forEach((r) => {
+        const c = cell('td', r.kpi, r.kpi.full(r.values[i]));
+        const j = r.judges[i];
+        if (j) {
+          // 판정은 기호만으로 알리지 않고 글자도 함께 붙여요(보조 기기용 글자는 화면에서 숨김)
+          const level = JM.LEVELS[j.level];
+          const icon = el('span', 'lv lv-' + j.level, level.icon);
+          icon.setAttribute('aria-hidden', 'true');
+          c.append(icon, el('span', 'sr-only', level.label));
+        }
+        row.appendChild(c);
+      });
+      const t = chartRow.targets[i];
+      row.append(
+        targetCell('td', t == null ? '–' : chartKpi.full(t)),
+        targetCell('td', rateText(chartKpi, chartRow.judges[i]))
+      );
       tbody.appendChild(row);
     }
 
@@ -332,8 +444,17 @@
     yearCell.scope = 'row';
     footRow.appendChild(yearCell);
     KPIS.forEach((kpi) => footRow.appendChild(cell('td', kpi, kpi.full(kpi.year(v)))));
+    footRow.append(targetCell('td', '–'), targetCell('td', '–'));
+
+    const hitRow = el('tr');
+    const hitHead = el('th', null, '달성 개월');
+    hitHead.scope = 'row';
+    hitRow.appendChild(hitHead);
+    rows.forEach((r) => hitRow.appendChild(cell('td', r.kpi, r.count.hit + '/' + r.count.total)));
+    hitRow.append(targetCell('td', '–'), targetCell('td', '–'));
+
     const tfoot = el('tfoot');
-    tfoot.appendChild(footRow);
+    tfoot.append(footRow, hitRow);
 
     table.replaceChildren(caption, thead, tbody, tfoot);
   }
@@ -341,9 +462,17 @@
   // ---- 전체 갱신 ----------------------------------------------------------
   function render() {
     renderFilters();
+    renderSummary();
     renderKpis();
     renderChart();
     renderTable();
+  }
+
+  // 주소 해시를 현재 상태로 맞춥니다. file:// 등에서 replaceState가 막혀도 화면은 계속 동작해요.
+  function syncHash() {
+    try {
+      history.replaceState(null, '', JM.hashFor(state));
+    } catch (e) { /* 주소를 못 고쳐도 넘어갑니다 */ }
   }
 
   // 다시 그려도 키보드 위치(포커스)가 그대로 남게 합니다.
@@ -352,6 +481,7 @@
     Object.assign(state, patch);
     hideTip();
     render();
+    syncHash();
     if (focused) {
       const again = document.querySelector('[data-focus="' + focused + '"]');
       if (again) again.focus();
@@ -366,6 +496,19 @@
 
   setupFilters();
   render();
+  // 틀린 값이 들어 있던 주소는 처음에 바로 바른 주소로 고쳐 둡니다.
+  syncHash();
+
+  // 주소창에서 해시를 고치거나 뒤로 가기를 하면 화면도 따라 바꿉니다.
+  // replaceState는 hashchange를 일으키지 않아서 다시 그리기가 되풀이되지 않아요.
+  window.addEventListener('hashchange', () => update(JM.readHash(location.hash, segmentNames)));
+
+  const linkButton = document.getElementById('btn-link');
+  linkButton.addEventListener('click', () => JM.copyLink(linkButton));
+
+  // CSV는 지금 고른 점포의 12개월 실적을 내려받아요.
+  const csvButton = document.getElementById('btn-csv');
+  csvButton.addEventListener('click', () => JM.downloadCsv(state.segment, segmentValues()));
 
   // 창 너비가 바뀌면 차트만 다시 그립니다.
   const chartHost = document.getElementById('chart');

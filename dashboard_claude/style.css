@@ -18,6 +18,8 @@
   --wash: rgba(42, 120, 214, 0.08);
   --good: #006300;
   --bad: #c42f2f;
+  --target: #52514e;
+  --warn: #fab219;
   --font: system-ui, -apple-system, "Segoe UI", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
 }
 
@@ -39,6 +41,8 @@
     --wash: rgba(57, 135, 229, 0.14);
     --good: #0ca30c;
     --bad: #ef6b6b;
+    --target: #c3c2b7;
+    --warn: #fab219;
   }
 }
 
@@ -59,6 +63,8 @@
   --wash: rgba(57, 135, 229, 0.14);
   --good: #0ca30c;
   --bad: #ef6b6b;
+  --target: #c3c2b7;
+  --warn: #fab219;
 }
 
 /* ---- 기본 ---- */
@@ -94,6 +100,69 @@ body {
 }
 
 /* ---- 머리글 ---- */
+.page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px 16px;
+}
+
+.toolbar {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.tool-btn {
+  padding: 8px 14px;
+  font: inherit;
+  font-size: 15px;
+  color: var(--text-1);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.tool-btn:focus-visible,
+#link-fallback:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* 상태 글과 대체 입력칸은 버튼 줄 아래에 띄워 둬서 나타나도 버튼이 움직이지 않아요 */
+#link-status {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  font-size: 13px;
+  white-space: nowrap;
+  color: var(--text-2);
+}
+
+#link-fallback {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 3;
+  width: min(420px, calc(100vw - 32px));
+  margin-top: 4px;
+  min-width: 0;
+  padding: 8px 12px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--text-1);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+}
+
+#link-fallback[hidden] { display: none; }
+
 .eyebrow {
   margin: 0;
   font-size: 13px;
@@ -155,6 +224,18 @@ body {
   margin: 0 0 9px;
   font-size: 13px;
   color: var(--text-2);
+}
+
+/* ---- 한 줄 요약 ---- */
+.summary {
+  margin: 0 0 16px;
+  padding: 12px 16px;
+  font-size: 15px;
+  color: var(--text-1);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 12px;
 }
 
 /* ---- KPI 카드 5개 ---- */
@@ -232,6 +313,21 @@ body {
   color: var(--text-2);
 }
 
+/* 목표 줄: 판정 기호·글자·달성률은 붙여 두고 ' · ' 뒤에서 줄을 바꿔요 */
+.kpi-target {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--target);
+}
+
+.kpi-target.is-none { color: var(--text-2); }
+.kpi-judge,
+.kpi-goal { white-space: nowrap; }
+.kpi-judge-text { font-weight: 600; color: var(--text-1); }
+.lv-good { color: var(--good); }
+.lv-near { color: var(--warn); }
+.lv-bad { color: var(--bad); }
+
 .is-good { color: var(--good); }
 .is-bad { color: var(--bad); }
 .is-flat { color: var(--text-2); }
@@ -301,6 +397,45 @@ body {
 /* ---- 막대 차트 ---- */
 .chart-card { position: relative; }
 
+/* 범례는 제목 줄 오른쪽에, 좁은 화면에서는 제목 아래에 둬요 */
+.chart-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+  color: var(--text-2);
+}
+
+.lg-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lg-bar {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+.lg-line {
+  width: 16px;
+  height: 2px;
+  background: var(--target);
+}
+
 .chart {
   margin-top: 12px;
   min-height: 300px;
@@ -342,6 +477,13 @@ body {
 .chart .bar.is-selected { fill: var(--accent); }
 .chart .bar.is-hover { opacity: 0.75; }
 
+.chart .target-mark {
+  stroke: var(--target);
+  stroke-width: 2;
+  shape-rendering: crispEdges;
+  pointer-events: none;
+}
+
 .chart .value-label {
   font-size: 12px;
   font-weight: 600;
@@ -382,6 +524,12 @@ body {
 }
 
 .tt-delta { font-weight: 600; }
+
+.tt-target {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--text-2);
+}
 
 /* ---- 월별 표 ---- */
 .table-wrap {
@@ -429,6 +577,25 @@ body {
   border-bottom: 0;
 }
 
+/* 바닥 두 줄('연간', '달성 개월')은 한 덩어리로 보이게 둘째 줄 위 선은 옅게 */
+.table-wrap tfoot tr + tr th,
+.table-wrap tfoot tr + tr td {
+  border-top: 1px solid var(--grid);
+}
+
+/* 목표·달성률 열은 실적 열과 구분해서 한 칸 띄우고 글자를 보조 색으로 */
+.table-wrap .is-target { color: var(--text-2); }
+.table-wrap thead th.is-target { color: var(--text-2); }
+.table-wrap th.is-target:nth-last-child(2),
+.table-wrap td.is-target:nth-last-child(2) { border-left: 1px solid var(--grid); }
+
+/* 판정 기호: 색은 .lv-good / .lv-near / .lv-bad가 정해요 */
+.lv {
+  margin-left: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
 /* ---- 바닥글 ---- */
 .page-footer {
   margin-top: 24px;
@@ -450,6 +617,8 @@ body {
 @media (max-width: 520px) {
   .page { padding-top: 24px; }
   .page-header h1 { font-size: 24px; }
+  .page-header { flex-direction: column; }
+  .toolbar { width: 100%; }
   .card { padding: 16px 14px 14px; }
   .field { flex: 1 1 140px; }
   .field select { width: 100%; min-width: 0; }
@@ -460,6 +629,9 @@ body {
   .chart .bar { fill: GrayText; }
   .chart .bar.is-selected { fill: Highlight; }
   .spark-dot { background: Highlight; }
+  .chart .target-mark { stroke: CanvasText; }
+  .lg-bar { background: Highlight; }
+  .lg-line { background: CanvasText; }
 }
 
 @media (prefers-reduced-motion: reduce) {

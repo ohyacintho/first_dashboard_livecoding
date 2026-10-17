@@ -14,9 +14,17 @@
   <div class="page">
     <!-- 제목과 설명을 바꾸려면 이 부분을 고치세요 -->
     <header class="page-header">
-      <p class="eyebrow">장마트 · 2025년 1~12월</p>
-      <h1>실적 모니터링</h1>
-      <p class="subtitle">핵심 지표 5개를 월별로 봅니다. 반품을 뺀 정상 거래 기준이에요.</p>
+      <div class="title-block">
+        <p class="eyebrow">장마트 · 2025년 1~12월</p>
+        <h1>실적 모니터링</h1>
+        <p class="subtitle">핵심 지표 5개를 월별로 봅니다. 반품을 뺀 정상 거래 기준이에요.</p>
+      </div>
+      <div class="toolbar">
+        <button id="btn-link" class="tool-btn" type="button">링크 복사</button>
+        <button id="btn-csv" class="tool-btn" type="button">CSV</button>
+        <span id="link-status" role="status"></span>
+        <input id="link-fallback" readonly hidden aria-label="공유 링크">
+      </div>
     </header>
 
     <section class="filters" aria-label="조회 조건">
@@ -31,12 +39,17 @@
       <p class="filter-note" id="filter-note" aria-live="polite"></p>
     </section>
 
+    <p class="summary" id="summary" aria-live="polite"></p>
+
     <section class="kpis" id="kpis" aria-label="핵심 지표 5개. 카드를 누르면 아래 차트가 그 지표로 바뀌어요"></section>
 
     <section class="card chart-card" id="chart-card">
-      <div class="card-head">
-        <h2 id="chart-title">월별 추이</h2>
-        <p class="card-sub" id="chart-sub"></p>
+      <div class="card-head chart-head">
+        <div>
+          <h2 id="chart-title">월별 추이</h2>
+          <p class="card-sub" id="chart-sub"></p>
+        </div>
+        <ul class="legend" id="legend" aria-label="범례"></ul>
       </div>
       <div class="chart" id="chart"></div>
       <div class="tooltip" id="tooltip" hidden></div>
@@ -60,6 +73,8 @@
 
   <script src="data.js"></script>
   <script src="kpis.js"></script>
+  <script src="targets.js"></script>
+  <script src="share.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
