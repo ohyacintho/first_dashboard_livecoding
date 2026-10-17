@@ -149,7 +149,7 @@
       return row;
     }
     const level = JM.LEVELS[j.level];
-    const rest = JM.judgeText(kpi, j).slice(level.icon.length + 1);
+    const rest = level.label + ' ' + JM.judgeDetail(kpi, j);
     const icon = el('span', 'lv-icon lv-' + j.level, level.icon);
     icon.setAttribute('aria-hidden', 'true');
     const judged = el('span', 'kpi-judge');
@@ -394,11 +394,17 @@
       return c;
     };
     // 달성률 칸 글자: 오를수록 좋은 지표는 '105.1%', 반품률은 '0.39%p 초과' / '0.10%p 여유'
-    const rateText = (kpi, j) => {
-      if (!j) return '–';
-      if (kpi.better === 'up') return JM.fmt.pctFloor1(j.ratio);
-      const level = JM.LEVELS[j.level];
-      return JM.judgeText(kpi, j).slice(level.icon.length + 1 + level.label.length + 1);
+    const rateText = (kpi, j) => (j ? JM.judgeDetail(kpi, j) : '–');
+    // 목표 칸 글자. 반품률은 실적과 같아 보이면 셋째 자리까지 보여 줘서(pairText) 판정과 어긋나 보이지 않게 해요.
+    const targetCellText = (kpi, actual, target) => {
+      if (target == null) return '–';
+      return kpi.unit === '%' ? JM.pairText(kpi, actual, target).target.replace(/%$/, '') : kpi.full(target);
+    };
+    // 판정 기호 칸. 판정이 없는 칸도 같은 폭의 빈 칸을 둬서 오른쪽 맞춤 숫자의 끝이 줄을 맞춰요.
+    const levelMark = (j) => {
+      const mark = el('span', j ? 'lv lv-' + j.level : 'lv', j ? JM.LEVELS[j.level].icon : undefined);
+      mark.setAttribute('aria-hidden', 'true');
+      return mark;
     };
 
     const headRow = el('tr');
@@ -422,18 +428,13 @@
       rows.forEach((r) => {
         const c = cell('td', r.kpi, r.kpi.full(r.values[i]));
         const j = r.judges[i];
-        if (j) {
-          // 판정은 기호만으로 알리지 않고 글자도 함께 붙여요(보조 기기용 글자는 화면에서 숨김)
-          const level = JM.LEVELS[j.level];
-          const icon = el('span', 'lv lv-' + j.level, level.icon);
-          icon.setAttribute('aria-hidden', 'true');
-          c.append(icon, el('span', 'sr-only', level.label));
-        }
+        c.appendChild(levelMark(j));
+        // 판정은 기호만으로 알리지 않고 글자도 함께 붙여요(보조 기기용 글자는 화면에서 숨김)
+        if (j) c.appendChild(el('span', 'sr-only', JM.LEVELS[j.level].label));
         row.appendChild(c);
       });
-      const t = chartRow.targets[i];
       row.append(
-        targetCell('td', t == null ? '–' : chartKpi.full(t)),
+        targetCell('td', targetCellText(chartKpi, chartRow.values[i], chartRow.targets[i])),
         targetCell('td', rateText(chartKpi, chartRow.judges[i]))
       );
       tbody.appendChild(row);
@@ -443,14 +444,22 @@
     const yearCell = el('th', null, '연간');
     yearCell.scope = 'row';
     footRow.appendChild(yearCell);
-    KPIS.forEach((kpi) => footRow.appendChild(cell('td', kpi, kpi.full(kpi.year(v)))));
+    KPIS.forEach((kpi) => {
+      const c = cell('td', kpi, kpi.full(kpi.year(v)));
+      c.appendChild(levelMark(null));
+      footRow.appendChild(c);
+    });
     footRow.append(targetCell('td', '–'), targetCell('td', '–'));
 
     const hitRow = el('tr');
     const hitHead = el('th', null, '달성 개월');
     hitHead.scope = 'row';
     hitRow.appendChild(hitHead);
-    rows.forEach((r) => hitRow.appendChild(cell('td', r.kpi, r.count.hit + '/' + r.count.total)));
+    rows.forEach((r) => {
+      const c = cell('td', r.kpi, r.count.hit + '/' + r.count.total);
+      c.appendChild(levelMark(null));
+      hitRow.appendChild(c);
+    });
     hitRow.append(targetCell('td', '–'), targetCell('td', '–'));
 
     const tfoot = el('tfoot');
@@ -480,6 +489,7 @@
     const focused = document.activeElement && document.activeElement.getAttribute('data-focus');
     Object.assign(state, patch);
     hideTip();
+    JM.hideFallback(); // 화면 상태가 바뀌면 옛 주소가 든 입력칸은 닫아요
     render();
     syncHash();
     if (focused) {
@@ -505,6 +515,15 @@
 
   const linkButton = document.getElementById('btn-link');
   linkButton.addEventListener('click', () => JM.copyLink(linkButton));
+
+  // 복사 대신 나온 주소 입력칸: 포커스를 잃거나 Esc를 누르면 닫아요.
+  const linkFallback = document.getElementById('link-fallback');
+  linkFallback.addEventListener('blur', JM.hideFallback);
+  linkFallback.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    JM.hideFallback();
+    linkButton.focus();
+  });
 
   // CSV는 지금 고른 점포의 12개월 실적을 내려받아요.
   const csvButton = document.getElementById('btn-csv');

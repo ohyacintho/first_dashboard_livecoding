@@ -53,16 +53,22 @@
     return { actual: JM.withUnit(kpi, a), target: JM.withUnit(kpi, t) };
   }
 
-  // '✔ 달성 105.1%', 반품률은 '✖ 미달 0.39%p 초과' / '✔ 달성 0.10%p 여유'
-  function judgeText(kpi, j) {
+  // 판정 뒤에 붙는 숫자 문구: '105.1%', 반품률은 '0.39%p 초과' / '0.10%p 여유'. 판정이 없으면 ''
+  function judgeDetail(kpi, j) {
     if (!j) return '';
-    const head = LEVELS[j.level].icon + ' ' + LEVELS[j.level].label + ' ';
     if (kpi.better === 'down') {
       const size = Math.abs(j.gap);
       const text = size.toFixed(2) === '0.00' && size !== 0 ? size.toFixed(3) : size.toFixed(2);
-      return head + text + '%p ' + (j.gap > 0 ? '초과' : '여유');
+      return text + '%p ' + (j.gap > 0 ? '초과' : '여유');
     }
-    return head + JM.fmt.pctFloor1(j.ratio);
+    return JM.fmt.pctFloor1(j.ratio);
+  }
+
+  // '✔ 달성 105.1%', 반품률은 '✖ 미달 0.39%p 초과' / '✔ 달성 0.10%p 여유'
+  function judgeText(kpi, j) {
+    if (!j) return '';
+    const level = LEVELS[j.level];
+    return level.icon + ' ' + level.label + ' ' + judgeDetail(kpi, j);
   }
 
   // '목표 3.28억 원', '목표 1.28% 이하', '목표 없음(4월부터)'
@@ -160,6 +166,7 @@
     LEVELS: LEVELS,
     targetsFor: targetsFor,
     judge: judge,
+    judgeDetail: judgeDetail,
     judgeText: judgeText,
     targetText: targetText,
     pairText: pairText,

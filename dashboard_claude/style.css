@@ -241,6 +241,9 @@ body {
   border-radius: 12px;
 }
 
+/* 요약 문장이 없으면 빈 상자를 보여 주지 않아요 */
+.summary:empty { display: none; }
+
 /* ---- KPI 카드 5개 ---- */
 .kpis {
   display: grid;
@@ -593,8 +596,12 @@ body {
 .table-wrap th.is-target:nth-last-child(2),
 .table-wrap td.is-target:nth-last-child(2) { border-left: 1px solid var(--grid); }
 
-/* 판정 기호: 색은 .lv-good / .lv-near / .lv-bad가 정해요 */
+/* 판정 기호: 색은 .lv-good / .lv-near / .lv-bad가 정해요.
+   폭을 고정해 두고 기호가 없는 칸에도 빈 칸을 넣어서 오른쪽 맞춤 숫자가 줄을 맞춰요 */
 .lv {
+  display: inline-block;
+  width: 1.1em;
+  text-align: center;
   margin-left: 4px;
   font-size: 12px;
   font-weight: 600;

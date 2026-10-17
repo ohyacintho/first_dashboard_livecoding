@@ -48,8 +48,12 @@
     input.select();
   }
 
+  // 입력칸은 포커스를 잃거나, Esc를 누르거나, 화면 상태가 바뀌면 닫아요(옛 주소가 남지 않게).
+  function hideFallback() {
+    document.getElementById('link-fallback').hidden = true;
+  }
+
   function copyLink(button) {
-    const input = document.getElementById('link-fallback');
     const clip = navigator.clipboard;
     if (!clip || typeof clip.writeText !== 'function') {
       showFallback();
@@ -57,7 +61,7 @@
     }
     return clip.writeText(location.href).then(
       () => {
-        input.hidden = true;
+        hideFallback();
         showStatus('링크를 복사했어요');
         if (button) button.focus();
       },
@@ -75,7 +79,8 @@
   function monthCells(kpi, actual, target) {
     if (target == null) return [csvNum(kpi, actual), '', '', ''];
     const j = JM.judge(kpi, actual, target);
-    const rate = kpi.better === 'down' ? '' : j.ratio.toFixed(2);
+    // 달성률은 화면처럼 내림해요(119.198 -> 119.19). 반올림하면 화면의 119.1%와 어긋나요.
+    const rate = kpi.better === 'down' ? '' : (Math.floor(j.ratio * 100) / 100).toFixed(2);
     return [csvNum(kpi, actual), csvNum(kpi, target), rate, JM.LEVELS[j.level].label];
   }
 
@@ -101,7 +106,7 @@
     });
 
     const lines = [header].concat(rows, [yearRow]).map((r) => r.join(','));
-    return '﻿' + lines.join('\r\n') + '\r\n';
+    return '\uFEFF' + lines.join('\r\n') + '\r\n';
   }
 
   // 장마트_실적_강남점_2025.csv
@@ -128,6 +133,7 @@
     readHash: readHash,
     hashFor: hashFor,
     copyLink: copyLink,
+    hideFallback: hideFallback,
     buildCsv: buildCsv,
     csvFileName: csvFileName,
     downloadCsv: downloadCsv,

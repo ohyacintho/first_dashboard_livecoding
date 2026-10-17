@@ -6,6 +6,10 @@
 (function () {
   'use strict';
 
+  // ---- 목표 계수: 목표를 더 빡빡하게/느슨하게 하려면 여기 숫자만 고치세요 ----
+  // 목표 = 직전 3개월 평균 × 계수 (반품률만 낮출수록 좋아서 0.95)
+  const TARGET_FACTOR = { sales: 1.05, customers: 1.05, orders: 1.05, aov: 1.05, returnRate: 0.95 };
+
   const MONTH_COUNT = 12;
 
   // ---- 숫자 모양 ----------------------------------------------------------
@@ -67,9 +71,6 @@
       short: (v) => v.toFixed(2), full: (v) => v.toFixed(2), axis: (v) => trim(v) + '%',
     },
   ];
-
-  // 목표 = 직전 3개월 평균 × 계수 (반품률만 낮출수록 좋아서 0.95)
-  const TARGET_FACTOR = { sales: 1.05, customers: 1.05, orders: 1.05, aov: 1.05, returnRate: 0.95 };
 
   const kpiByKey = (key) => KPIS.find((k) => k.key === key);
 

@@ -1,0 +1,10 @@
+# 작성: Claude (Anthropic)
+# 작업 폴더에만 두고 GitHub에는 올리지 않는 파일
+docs/
+tests.html
+
+# 원본 데이터, 파이썬 캐시, OS 임시 파일
+*.csv
+__pycache__/
+.DS_Store
+Thumbs.db
