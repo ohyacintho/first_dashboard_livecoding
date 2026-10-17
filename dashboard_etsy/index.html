@@ -1,0 +1,138 @@
+<!doctype html>
+<!-- 작성: Claude (Anthropic) · 장마트 2025 실적 리포트 (Etsy 디자인 시스템 양식) -->
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>장마트 실적 리포트</title>
+  <meta name="description" content="장마트 2025년 구매 데이터 분석: 월별 실적, 상품군, 채널·점포, 고객 등급, 요일, 결제수단">
+  <meta name="generator" content="Claude (Anthropic)">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=Noto+Serif+KR:wght@600;700&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="page">
+    <!-- 제목과 설명을 바꾸려면 이 부분을 고치세요 -->
+    <header class="masthead">
+      <div>
+        <p class="brand"><span class="brand-mark" aria-hidden="true">장</span>장마트</p>
+        <h1>2025 실적 리포트</h1>
+        <p class="lede">한 해 구매 기록으로 매출 흐름, 잘 팔린 상품, 고객을 정리했어요.</p>
+      </div>
+      <ul class="chips" id="chips" aria-label="데이터 정보"></ul>
+    </header>
+
+    <section class="hero" aria-labelledby="hero-label">
+      <div>
+        <p class="hero-label" id="hero-label">2025년 순매출 (반품 제외)</p>
+        <p class="hero-number" id="hero-number"></p>
+        <p class="hero-sub" id="hero-sub"></p>
+      </div>
+      <ol class="findings" id="findings" aria-label="핵심 발견"></ol>
+    </section>
+
+    <section class="kpis" id="kpis" aria-label="핵심 지표"></section>
+
+    <section class="card" aria-labelledby="monthly-title">
+      <div class="card-head">
+        <div>
+          <h2 id="monthly-title">월별 추이</h2>
+          <p class="card-sub" id="monthly-sub"></p>
+        </div>
+        <div class="tabs" role="tablist" aria-label="월별 지표" id="monthly-tabs"></div>
+      </div>
+      <div class="chart-wrap">
+        <div class="chart" id="monthly-chart"></div>
+        <div class="tooltip" id="tooltip" hidden></div>
+      </div>
+      <ul class="legend">
+        <li><i style="background: var(--color-primary-200)"></i>상반기(1~6월)</li>
+        <li><i style="background: var(--color-primary-500)"></i>하반기(7~12월)</li>
+      </ul>
+    </section>
+
+    <div class="grid-2">
+      <section class="card" aria-labelledby="cat-title">
+        <div class="card-head">
+          <div>
+            <h2 id="cat-title">상품군</h2>
+            <p class="card-sub" id="cat-sub"></p>
+          </div>
+          <div class="tabs" role="tablist" aria-label="상품군 지표" id="cat-tabs"></div>
+        </div>
+        <ul class="bars" id="cat-bars"></ul>
+      </section>
+
+      <section class="card" aria-labelledby="ch-title">
+        <div class="card-head">
+          <div>
+            <h2 id="ch-title">채널과 점포</h2>
+            <p class="card-sub" id="ch-sub"></p>
+          </div>
+        </div>
+        <div class="split" id="channel-split"></div>
+        <div class="split-legend" id="channel-legend"></div>
+        <ul class="bars" id="store-bars"></ul>
+      </section>
+    </div>
+
+    <section class="card" aria-labelledby="rfm-title">
+      <div class="card-head">
+        <div>
+          <h2 id="rfm-title">고객 등급 (RFM)</h2>
+          <p class="card-sub" id="rfm-sub"></p>
+        </div>
+      </div>
+      <div class="grades" id="grades"></div>
+    </section>
+
+    <div class="grid-2">
+      <section class="card" aria-labelledby="wd-title">
+        <div class="card-head">
+          <div>
+            <h2 id="wd-title">요일별 하루 평균 매출</h2>
+            <p class="card-sub" id="wd-sub"></p>
+          </div>
+        </div>
+        <ul class="bars" id="wd-bars"></ul>
+      </section>
+
+      <section class="card" aria-labelledby="pay-title">
+        <div class="card-head">
+          <div>
+            <h2 id="pay-title">결제수단</h2>
+            <p class="card-sub" id="pay-sub"></p>
+          </div>
+        </div>
+        <div class="split" id="pay-split"></div>
+        <div class="split-legend" id="pay-legend"></div>
+        <h3 class="subhead">상품군별 반품률과 할인율</h3>
+        <div class="table-wrap">
+          <table id="cat-table"></table>
+        </div>
+      </section>
+    </div>
+
+    <section class="card" aria-labelledby="top-title">
+      <div class="card-head">
+        <div>
+          <h2 id="top-title">많이 팔린 상품 (매출 기준)</h2>
+          <p class="card-sub">상위 8개 상품이에요. 소형가전과 침구가 대부분이에요.</p>
+        </div>
+      </div>
+      <ol class="products" id="products"></ol>
+    </section>
+
+    <footer class="footer">
+      <p id="footer-data"></p>
+      <p>매출은 반품을 뺀 정상 거래 기준이에요. 객단가 = 매출 ÷ 주문 건수, 반품률 = 반품 금액 ÷ 전체 금액, 할인율 = 할인금액 ÷ (단가 × 수량).</p>
+      <p>디자인: Etsy 디자인 시스템(오빠두 디자인 시스템 갤러리)의 색·글꼴 토큰 참고 · 만든 도구: Claude (Anthropic)</p>
+    </footer>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
